@@ -1,0 +1,7 @@
+{
+  "schemaType": "LAUNCHER",
+  "id": "real-user-journey-experience-launcher",
+  "displayName": "RealUserJourneyExperienceLauncher",
+  "description": "Describe me",
+  "rootNerdletId": "real-user-journey-experience"
+}
