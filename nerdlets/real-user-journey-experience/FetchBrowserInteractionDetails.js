@@ -39,8 +39,8 @@ export default class FetchBrowserInteractionDetails extends React.Component {
       || (this.state.appName != null && this.state.appName != newBrowserInteractionDetails.appName)
       || (this.state.interactionName != null && this.state.interactionName != newBrowserInteractionDetails.browserInteractionName) ) {
 
-        console.log("FetchBrowserInteractionDetails.componentWillReceiveProps >> ");
-        console.log(newBrowserInteractionDetails);
+        //console.log("FetchBrowserInteractionDetails.componentWillReceiveProps >> ");
+        //console.log(newBrowserInteractionDetails);
 
         this.initializeData(newBrowserInteractionDetails);
         
