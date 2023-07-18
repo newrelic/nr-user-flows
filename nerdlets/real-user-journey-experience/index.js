@@ -39,12 +39,19 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
     /*
     return (
       <div>
-        <h4>Select the browser application to view the real user journey flow</h4>
+        <h4>Select an Account and browser application to view the real user journey flow</h4>
+        <FetchBrowserApplications />
+      </div>
+    );
+    */
+
+    return (
+      <div>
+        <h4>Select an <b>Account</b> and a <b>browser application</b> to view the real user journey flow</h4>
         <PlatformStateContext.Consumer>
           {(platformState) => {
-            //console.log(platformState);
             if (platformState.accountId == 'cross-account') {
-              return ''
+              return (<span></span>)
             } else {
               return (
                     <FetchBrowserApplications />
@@ -52,14 +59,6 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
             }
           }}
         </PlatformStateContext.Consumer>
-      </div>
-    );
-    */
-
-    return (
-      <div>
-        <h4>Select the browser application to view the real user journey flow</h4>
-        <FetchBrowserApplications />
       </div>
     );
 

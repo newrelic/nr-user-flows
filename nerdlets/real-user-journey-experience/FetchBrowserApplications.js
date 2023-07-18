@@ -16,11 +16,10 @@ export default class FetchBrowserApplications extends React.Component {
   constructor() {
     super(...arguments);
 
-    /*
-    PlatformStateContext.subscribe((platformState) => {      
+    PlatformStateContext.subscribe((platformState) => {
+      //console.log("platformState.accountId >> " + platformState.accountId);
       this.setState({ accountId: platformState.accountId});
     });
-    */
 
     this.state = {
       search: '',
@@ -38,6 +37,10 @@ export default class FetchBrowserApplications extends React.Component {
       {
         type: 'entityType',
         value: { domain: 'BROWSER', type: 'APPLICATION' }
+      },
+      {
+        type: 'tag',
+        value: { key: 'accountId', value: this.state.accountId }
       }
     ];
 
@@ -83,7 +86,7 @@ export default class FetchBrowserApplications extends React.Component {
                         iconType={Dropdown.ICON_TYPE.HARDWARE_AND_SOFTWARE__SOFTWARE__BROWSER}
                         items={apps} search={search}
                         onSearch={(searchStr) => this.setState({ search: searchStr.target.value })} >
-                          { ({ item }) => <DropdownItem onClick={(evt) => this.manageSelectedBrowserApplication(item, evt)} key={item.guid}>{item.accountId} - {item.name}</DropdownItem> }
+                          { ({ item }) => <DropdownItem onClick={(evt) => this.manageSelectedBrowserApplication(item, evt)} key={item.guid}>{item.name}</DropdownItem> }
                       </Dropdown>
                     </BlockText>
                   </Tile>
@@ -154,7 +157,7 @@ export default class FetchBrowserApplications extends React.Component {
                         iconType={Dropdown.ICON_TYPE.HARDWARE_AND_SOFTWARE__SOFTWARE__BROWSER}
                         items={apps} search={search}
                         onSearch={(searchStr) => this.setState({ search: searchStr.target.value })} >
-                          { ({ item }) => <DropdownItem onClick={(evt) => this.manageSelectedBrowserApplication(item, evt)} key={item.guid}>{item.accountId} - {item.name}</DropdownItem> }
+                          { ({ item }) => <DropdownItem onClick={(evt) => this.manageSelectedBrowserApplication(item, evt)} key={item.guid}>{item.name}</DropdownItem> }
                       </Dropdown>
                     </BlockText>
                   </Tile>

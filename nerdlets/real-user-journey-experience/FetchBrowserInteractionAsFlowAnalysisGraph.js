@@ -13,11 +13,19 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.constructor >> " + JSON.stringify(browserInteraction));
 
+    //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+
+    this.initializeBrowserInteractionAppDetails(browserInteraction);
+
+  }
+
+  initializeBrowserInteractionAppDetails(browserInteraction) {
     const initPlotData = {
       nodes: [
         {
           id: browserInteraction.browserInteractionName,
-          value: { text: browserInteraction.browserInteractionName }
+          value: { title: browserInteraction.browserInteractionName }
         }
       ],
       edges: [
@@ -35,19 +43,52 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       displayBrowserInteractionDetail: false,
     };
 
-    //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-
-
     this.appendChildren(browserInteraction.browserInteractionName, browserInteraction.browserInteractionName, true).then(() => {
         this.setState({ render:false });
     });
+
   }
 
   shouldComponentUpdate() {
     return this.state.render;
     //return false;
   }
+
+  componentWillReceiveProps(newBrowserInteraction) {
+
+    if ((this.state.accountId != null && this.state.accountId != newBrowserInteraction.applicationDetails.accountId)
+        || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)) {
+        this.setState({ render:true });
+
+        //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
+        //console.log(newBrowserInteraction);
+
+        const resetPlotData = {
+          nodes: [],
+          edges: []
+        }
+        this.setState({ plotData: resetPlotData });
+
+        this.initializeBrowserInteractionAppDetails(newBrowserInteraction);
+
+    }
+
+  }
+
+  /**
+   * Check if an edge is cyclic
+   * a -> b, b -> a
+   * This will lead to infinite loop and the rendering makes it infinite
+   */
+  isNotACyclicEdge(src, dest) {
+    //Check, if there is already an edge from dest to src
+    if(this.state.plotData.edges.find((edge) => (edge.source === dest && edge.target === src))) {
+      //console.log("Is a cyclic node >> ");
+      return false;
+    }
+    return true;
+  }
+
 
   async appendChildren(interactionName, srcDisplayName, isFirstExecution) {
 
@@ -91,12 +132,17 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             childBrowserInteractionDetail.targetInteractionName = facetInfo.name[0];
             childBrowserInteractionDetail.value = facetInfo.results[0].uniqueCount;
 
-            this.appendChildren(facetInfo.name[0], childDisplayName, false).then(() => {
-                this.setState({ render:false });
+           /* 
+            * Check if an edge is cyclic (a -> b, b -> a). This will lead to infinite loop and the rendering makes it infinite.
+            */
+            if (this.isNotACyclicEdge(srcDisplayName, childDisplayName)) {
+              childs.push(childBrowserInteractionDetail);
+              this.appendChildren(facetInfo.name[0], childDisplayName, false).then(() => {
+                  this.setState({ render:false });
 
-            });
+              });
 
-            childs.push(childBrowserInteractionDetail);
+            }
 
         });
 
@@ -149,7 +195,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   }
 
   renderInteractionDetails(browserInteractionDetail) {
-      console.log('renderInteractionDetails >>');
+      //console.log('renderInteractionDetails >>');
       this.setState({ browserInteractionDetail:browserInteractionDetail });
       this.setState({ displayBrowserInteractionDetail:true });
       this.setState({ render:true });
@@ -158,7 +204,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         this.setState({ render:false });
         this.setState({ displayBrowserInteractionDetail:false });
 
-      },100);
+      },500);
       
   }
 
@@ -219,7 +265,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             //console.log(item);
             //console.log('Type of item : ' + item._cfg.type);
             //console.log(item._cfg.model.value.title + ' ~ ' + item._cfg.model.value.interactionName);
-            console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
+            //console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
             //console.log(this.state.accountId + ' ~ ' + this.state.appName);
 
             var browserInteractionDetail = {};
@@ -228,6 +274,9 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             browserInteractionDetail.browserInteractionName = item._cfg.model.interactionName;
             
             this.renderInteractionDetails(browserInteractionDetail);
+          });
+          graph.off('canvas:contextmenu', (evt) => {
+            evt.preventDefault();
           });
         },
       };
