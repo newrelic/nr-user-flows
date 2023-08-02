@@ -8,8 +8,6 @@ import {
   Tile, HeadingText, BlockText, Spinner
  } from 'nr1';
 import FetchBrowserApplicationDetails from './FetchBrowserApplicationDetails';
-import FetchBrowserInteractionAsSankeyPlot from './FetchBrowserInteractionAsSankeyPlot';
-import FetchBrowserInteractionAsFlowGraph from './FetchBrowserInteractionAsFlowGraph';
 import FetchBrowserInteractionAsFlowAnalysisGraph from './FetchBrowserInteractionAsFlowAnalysisGraph';
 
 export default class FetchBrowserApplications extends React.Component {
@@ -68,8 +66,6 @@ export default class FetchBrowserApplications extends React.Component {
 
     if (selectedAppDetails) {
         const topInteractionsQueryWithAppName = this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',selectedAppDetails.name);
-        //<FetchBrowserInteractionAsSankeyPlot {...browserInteraction} />
-        //<FetchBrowserInteractionAsFlowGraph {...browserInteraction} />
         return (
           <Grid gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.MEDIUM]} fullWidth fullHeight>
             <GridItem columnSpan={12}>
@@ -121,6 +117,8 @@ export default class FetchBrowserApplications extends React.Component {
 
                     browserInteractions.push(browserInteractionDetail);
                   });
+
+                  //console.log("Number of initial page loads >> " + browserInteractions.length);
 
                   return (
                     <React.Fragment>

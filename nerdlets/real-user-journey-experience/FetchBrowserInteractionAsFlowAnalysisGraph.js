@@ -1,5 +1,5 @@
 import React from 'react';
-import { NrqlQuery } from 'nr1';
+import { NrqlQuery, Spinner } from 'nr1';
 
 import { FlowAnalysisGraph } from '@ant-design/graphs';
 import FetchBrowserInteractionDetails from './FetchBrowserInteractionDetails';
@@ -21,17 +21,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   }
 
   initializeBrowserInteractionAppDetails(browserInteraction) {
+
     const initPlotData = {
-      nodes: [
-        {
-          id: browserInteraction.browserInteractionName,
-          value: { title: browserInteraction.browserInteractionName }
-        }
-      ],
-      edges: [
-        {"source":browserInteraction.browserInteractionName,"target":browserInteraction.browserInteractionName,"value":browserInteraction.uniqueSessionCount}
-      ]
-    };
+      nodes: [],
+      edges: []
+    }
+
 
     this.state = {
       plotData: initPlotData,
@@ -43,31 +38,36 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       displayBrowserInteractionDetail: false,
     };
 
+    this.queryCounter = 0;
+    this.plotGraph = false;
+    this.interactions = [
+        {"source":browserInteraction.browserInteractionName,
+        "srcInteractionName":browserInteraction.browserInteractionName,
+        "target":browserInteraction.browserInteractionName,
+        "targetInteractionName":browserInteraction.browserInteractionName,
+        "value":browserInteraction.uniqueSessionCount}
+      ];
+
     this.appendChildren(browserInteraction.browserInteractionName, browserInteraction.browserInteractionName, true).then(() => {
-        this.setState({ render:false });
+        this.afterAppendingChild();
     });
 
   }
 
   shouldComponentUpdate() {
     return this.state.render;
-    //return false;
   }
 
   componentWillReceiveProps(newBrowserInteraction) {
 
     if ((this.state.accountId != null && this.state.accountId != newBrowserInteraction.applicationDetails.accountId)
         || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)) {
-        this.setState({ render:true });
 
         //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
         //console.log(newBrowserInteraction);
 
-        const resetPlotData = {
-          nodes: [],
-          edges: []
-        }
-        this.setState({ plotData: resetPlotData });
+        this.plotGraph = false;
+        this.setState({ render:true });
 
         this.initializeBrowserInteractionAppDetails(newBrowserInteraction);
 
@@ -75,20 +75,81 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
   }
 
-  /**
-   * Check if an edge is cyclic
-   * a -> b, b -> a
-   * This will lead to infinite loop and the rendering makes it infinite
-   */
-  isNotACyclicEdge(src, dest) {
-    //Check, if there is already an edge from dest to src
-    if(this.state.plotData.edges.find((edge) => (edge.source === dest && edge.target === src))) {
-      //console.log("Is a cyclic node >> ");
-      return false;
-    }
-    return true;
+  afterAppendingChild() {
+
+      this.queryCounter = this.queryCounter - 1;
+      //console.log("this.queryCounter >> " + this.queryCounter);
+      //console.log("this.interactions >> ");
+      //console.log(this.interactions);
+      if (this.queryCounter === 0) {
+
+            if (this.interactions.length > 1) {
+              this.interactions = this.interactions.slice(1);
+            }
+
+            // remove any duplicate interactions and build nodeDetails.
+            let uniqueNodes = [];
+
+            this.interactions.forEach((thisInteraction) => {
+
+                // Add Node
+                if (!uniqueNodes.find((node) => (node.id === thisInteraction.source))) {
+                  var nodeDetails = {};
+                  nodeDetails.value = {};
+                  nodeDetails.id = thisInteraction.source;
+                  nodeDetails.value.title = thisInteraction.source;
+                  nodeDetails.interactionName = thisInteraction.srcInteractionName;
+                  uniqueNodes.push(nodeDetails);
+                }
+                if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
+                  var nodeDetails = {};
+                  nodeDetails.value = {};
+                  nodeDetails.id = thisInteraction.target;
+                  nodeDetails.value.title = thisInteraction.target;
+                  nodeDetails.interactionName = thisInteraction.targetInteractionName;
+                  uniqueNodes.push(nodeDetails);
+                }
+            });
+            
+            const updatedPlotData = {
+              nodes: uniqueNodes,
+              edges: this.interactions
+            }
+
+            //console.log("updatedPlotData >> ");
+            //console.log(updatedPlotData);
+
+            //Update plotting data
+            this.setState({ plotData: updatedPlotData });
+            this.plotGraph = true;
+            this.setState({ render:true });
+
+            setTimeout(() => {
+              this.setState({ render:false });
+            },300);
+      }
   }
 
+  /**
+   * Validates an edge with already captured date to avoid duplicates, cycle dependencies.
+   */
+  isValidEdge(interactionsArr, thisSrcInteractionName, thisDestInteractionName) {
+
+    //Check if the edge is duplicate
+    if(interactionsArr.find((edge) => (edge.srcInteractionName === thisSrcInteractionName && edge.targetInteractionName === thisDestInteractionName))) {
+      //console.log("Is a duplicate edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
+      return false;
+    }
+
+    //Check if an edge is cyclic. This will lead to infinite loop and the rendering makes it infinite
+    //a -> b, b -> a
+    if(interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName && edge.targetInteractionName === thisSrcInteractionName))) {
+      //console.log("Is a cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
+      return false;
+    }
+
+    return true;
+  }
 
   async appendChildren(interactionName, srcDisplayName, isFirstExecution) {
 
@@ -100,7 +161,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       interactionsQuery = interactionsQuery.replace('$PREVIOUS_URL$',interactionName);
       //console.log("appendChild Query >>>> " + interactionsQuery);
 
-      this.queryCount = this.queryCount + 1;
+      this.queryCounter = this.queryCounter + 1;
       const response = await NrqlQuery.query({
         accountIds:[this.state.accountId],
         formatType: NrqlQuery.FORMAT_TYPE.RAW,
@@ -111,7 +172,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       if (response && response.data && response.data.facets.length > 0) {
         //add children details
         //console.log("Num Of Children > " + response.data.facets.length);
-        let childs = [];
         response.data.facets.forEach((facetInfo) => {
             //define child Display Name
             let childDisplayName = facetInfo.name[0];
@@ -132,65 +192,19 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             childBrowserInteractionDetail.targetInteractionName = facetInfo.name[0];
             childBrowserInteractionDetail.value = facetInfo.results[0].uniqueCount;
 
-           /* 
-            * Check if an edge is cyclic (a -> b, b -> a). This will lead to infinite loop and the rendering makes it infinite.
-            */
-            if (this.isNotACyclicEdge(srcDisplayName, childDisplayName)) {
-              childs.push(childBrowserInteractionDetail);
+            if (this.isValidEdge(this.interactions, interactionName, facetInfo.name[0])) {
+              this.interactions.push(childBrowserInteractionDetail);
               this.appendChildren(facetInfo.name[0], childDisplayName, false).then(() => {
-                  this.setState({ render:false });
+                  //this.setState({ render:false });
+                  //this.queryCounter = this.queryCounter - 1;
+                  this.afterAppendingChild();
 
               });
-
             }
-
+            
         });
 
-        //While using interactionId, session flow is not maintained, hence there is a possibility of duplicate flows.
-        // Remove duplicates from plotData
-        let allInteractions = [ ...this.state.plotData.edges, ...childs ];
-        //Remove top node, which does not have a target
-        if (isFirstExecution) {
-          allInteractions = allInteractions.slice(1);
-        }
-
-        let uniqueNodes = [];
-        let uniqueInteractions = allInteractions.reduce((uniques, thisInteraction) => {
-                                    if (!uniques.find((interaction) => (interaction.source === thisInteraction.source && interaction.target === thisInteraction.target))) {
-                                        uniques.push(thisInteraction);
-                                    }
-                                    if (!uniqueNodes.find((node) => (node.id === thisInteraction.source))) {
-                                      var nodeDetails = {};
-                                      nodeDetails.value = {};
-                                      nodeDetails.id = thisInteraction.source;
-                                      nodeDetails.value.title = thisInteraction.source;
-                                      nodeDetails.interactionName = thisInteraction.srcInteractionName;
-                                      uniqueNodes.push(nodeDetails);
-                                    }
-                                    if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
-                                      var nodeDetails = {};
-                                      nodeDetails.value = {};
-                                      nodeDetails.id = thisInteraction.target;
-                                      nodeDetails.value.title = thisInteraction.target;
-                                      nodeDetails.interactionName = thisInteraction.targetInteractionName;
-                                      uniqueNodes.push(nodeDetails);
-                                    }
-                                    return uniques;
-                              }, []);
-
-        
-        const updatedPlotData = {
-          nodes: uniqueNodes,
-          edges: uniqueInteractions
-        }
-
-
-        //Update plotting data
-        this.setState({ plotData: updatedPlotData });
-        this.setState({ render:true });
-
       }
-
 
   }
 
@@ -255,6 +269,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           nodesepFunc: () => 30,
         },
         //behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node'],
+        behaviors: ['drag-node'],
         //theme: 'dark',
         onReady: (graph) => {
           //graph.zoom(1);
@@ -283,7 +298,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     const browserInteractionDetail = this.state.browserInteractionDetail;
 
-    if (this.state.displayBrowserInteractionDetail) {
+    if (this.plotGraph && this.state.displayBrowserInteractionDetail) {
         return (
             <React.Fragment>
               <FlowAnalysisGraph {...config} />
@@ -291,8 +306,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             </React.Fragment>
         );
 
-    } else {
+    } else if (this.plotGraph ) {
         return <FlowAnalysisGraph {...config} />
+    } else {
+        return <Spinner type={Spinner.TYPE.DOT} spacingType={[Spinner.SPACING_TYPE.EXTRA_LARGE]} />
     }
 
   }
