@@ -26,7 +26,7 @@ export default class FetchBrowserApplications extends React.Component {
       selectedApp:null,
     };
 
-    this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
+    this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
 
   }
 
@@ -112,6 +112,7 @@ export default class FetchBrowserApplications extends React.Component {
                     browserInteractionDetail.category = facetInfo.name[2];
                     browserInteractionDetail.trigger = facetInfo.name[3];
                     browserInteractionDetail.uniqueSessionCount = facetInfo.results[0].uniqueCount;
+                    browserInteractionDetail.avgDuration = facetInfo.results[1].average;
 
                     browserInteractionDetail.applicationDetails = this.state.selectedApp;
 

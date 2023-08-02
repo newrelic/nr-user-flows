@@ -4,7 +4,7 @@ import { NrqlQuery, Spinner } from 'nr1';
 import { FlowAnalysisGraph } from '@ant-design/graphs';
 import FetchBrowserInteractionDetails from './FetchBrowserInteractionDetails';
 
-// https://charts.ant.design/en/examples/relation-graph/decomposition-tree-graph/#basic
+// https://charts.ant.design/en/examples/relation-graph/flow-analysis-graph/#type
 // https://charts.ant.design/en/manual/getting-started
 export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Component {
 
@@ -14,7 +14,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.constructor >> " + JSON.stringify(browserInteraction));
 
     //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
 
     this.initializeBrowserInteractionAppDetails(browserInteraction);
 
@@ -45,7 +45,9 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         "srcInteractionName":browserInteraction.browserInteractionName,
         "target":browserInteraction.browserInteractionName,
         "targetInteractionName":browserInteraction.browserInteractionName,
-        "value":browserInteraction.uniqueSessionCount}
+        "value":browserInteraction.uniqueSessionCount,
+        "avgDuration":browserInteraction.avgDuration
+        }
       ];
 
     this.appendChildren(browserInteraction.browserInteractionName, browserInteraction.browserInteractionName, true).then(() => {
@@ -83,33 +85,44 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       //console.log(this.interactions);
       if (this.queryCounter === 0) {
 
-            if (this.interactions.length > 1) {
-              this.interactions = this.interactions.slice(1);
-            }
-
             // remove any duplicate interactions and build nodeDetails.
             let uniqueNodes = [];
 
-            this.interactions.forEach((thisInteraction) => {
+            // Add First source as Node.
+            const thisInteraction = this.interactions[0];
+            var nodeDetails = {};
+            nodeDetails.value = {};
+            nodeDetails.id = thisInteraction.source;
+            nodeDetails.value.title = thisInteraction.source;
+            nodeDetails.interactionName = thisInteraction.srcInteractionName;
+            nodeDetails.value.items = [];
+            var avgDurationItem = {};
+            avgDurationItem.text = 'Duration';
+            avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
+            nodeDetails.value.items.push(avgDurationItem);
 
-                // Add Node
-                if (!uniqueNodes.find((node) => (node.id === thisInteraction.source))) {
-                  var nodeDetails = {};
-                  nodeDetails.value = {};
-                  nodeDetails.id = thisInteraction.source;
-                  nodeDetails.value.title = thisInteraction.source;
-                  nodeDetails.interactionName = thisInteraction.srcInteractionName;
-                  uniqueNodes.push(nodeDetails);
-                }
-                if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
-                  var nodeDetails = {};
-                  nodeDetails.value = {};
-                  nodeDetails.id = thisInteraction.target;
-                  nodeDetails.value.title = thisInteraction.target;
-                  nodeDetails.interactionName = thisInteraction.targetInteractionName;
-                  uniqueNodes.push(nodeDetails);
-                }
-            });
+            uniqueNodes.push(nodeDetails);
+
+            if (this.interactions.length > 1) {
+              this.interactions = this.interactions.slice(1);
+              this.interactions.forEach((thisInteraction) => {
+
+                  if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
+                    var nodeDetails = {};
+                    nodeDetails.value = {};
+                    nodeDetails.id = thisInteraction.target;
+                    nodeDetails.value.title = thisInteraction.target;
+                    nodeDetails.interactionName = thisInteraction.targetInteractionName;
+                    nodeDetails.value.items = [];
+                    var avgDurationItem = {};
+                    avgDurationItem.text = 'Duration';
+                    avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
+                    nodeDetails.value.items.push(avgDurationItem);
+                    
+                    uniqueNodes.push(nodeDetails);
+                  }
+              });
+            }
             
             const updatedPlotData = {
               nodes: uniqueNodes,
@@ -191,6 +204,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             childBrowserInteractionDetail.target = childDisplayName;
             childBrowserInteractionDetail.targetInteractionName = facetInfo.name[0];
             childBrowserInteractionDetail.value = facetInfo.results[0].uniqueCount;
+            childBrowserInteractionDetail.avgDuration = facetInfo.results[1].average;
 
             if (this.isValidEdge(this.interactions, interactionName, facetInfo.name[0])) {
               this.interactions.push(childBrowserInteractionDetail);
@@ -228,16 +242,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     const config = {
         data: this.state.plotData,    
-        height: 400,
+        //height: 400,
         //width: 1200,
         nodeCfg: {
+          size: [150, 25],
           autoWidth: true,
-          badge: {
-          },
           title: {
-            containerStyle: {
-              fill: 'transparent',
-            },
             style: {
               fill: '#000',
             },
@@ -245,36 +255,20 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         },
         edgeCfg: {
           endArrow: true,
-          /*label: {
-            style: {
-              fill: '#5ae859',
-            },
-          },*/
           style: {
             stroke:'#c86bdd',
           },
         },
-        /*markerCfg: {
-        },*/
-        miniMapCfg: {
-          //show: true,
-          type: 'delegate',
-          refresh: true,
-        },
         layout: {
-          //type: 'comboForce',
-          maxZoom: 1,
+          //maxZoom: 1,
           preventOverlap: true,
-          ranksepFunc: () => 30,
-          nodesepFunc: () => 30,
+          ranksepFunc: () => 20,
+          nodesepFunc: () => 20,
         },
         //behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node'],
         behaviors: ['drag-node'],
         //theme: 'dark',
         onReady: (graph) => {
-          //graph.zoom(1);
-          //graph.fitView(10);
-          //graph.fitCenter();
           graph.on('node:click', (evt) => {
             const item = evt.item;
             //console.log(item);
