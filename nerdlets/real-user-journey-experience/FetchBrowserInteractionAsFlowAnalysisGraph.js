@@ -81,24 +81,25 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
       this.queryCounter = this.queryCounter - 1;
       //console.log("this.queryCounter >> " + this.queryCounter);
-      //console.log("this.interactions >> ");
-      //console.log(this.interactions);
       if (this.queryCounter === 0) {
+
+            console.log("this.interactions >> ");
+            console.log(this.interactions);
 
             // remove any duplicate interactions and build nodeDetails.
             let uniqueNodes = [];
 
             // Add First source as Node.
-            const thisInteraction = this.interactions[0];
+            const srcInteraction = this.interactions[0];
             var nodeDetails = {};
             nodeDetails.value = {};
-            nodeDetails.id = thisInteraction.source;
-            nodeDetails.value.title = thisInteraction.source;
-            nodeDetails.interactionName = thisInteraction.srcInteractionName;
+            nodeDetails.id = srcInteraction.source;
+            nodeDetails.value.title = srcInteraction.source;
+            nodeDetails.interactionName = srcInteraction.srcInteractionName;
             nodeDetails.value.items = [];
             var avgDurationItem = {};
             avgDurationItem.text = 'Duration';
-            avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
+            avgDurationItem.value = srcInteraction.avgDuration.toFixed(3) + ' (s)';
             nodeDetails.value.items.push(avgDurationItem);
 
             uniqueNodes.push(nodeDetails);
@@ -114,11 +115,34 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
                     nodeDetails.value.title = thisInteraction.target;
                     nodeDetails.interactionName = thisInteraction.targetInteractionName;
                     nodeDetails.value.items = [];
-                    var avgDurationItem = {};
-                    avgDurationItem.text = 'Duration';
-                    avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
-                    nodeDetails.value.items.push(avgDurationItem);
-                    
+
+                    let interactionsWithThisTarget = this.interactions.filter((interaction) => interaction.target === thisInteraction.target);
+                    console.log("Interactions for " + thisInteraction.target + " : " + interactionsWithThisTarget.length);
+
+                    if (interactionsWithThisTarget.length == 1) {
+                        var avgDurationItem = {};
+                        avgDurationItem.text = 'Duration';
+                        avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
+                        nodeDetails.value.items.push(avgDurationItem);
+                      } else {
+                        // Empty Label Item
+                        var avgDurationItem = {};
+                        avgDurationItem.text = 'Duration From';
+                        avgDurationItem.value = '';
+                        nodeDetails.value.items.push(avgDurationItem);
+
+                        interactionsWithThisTarget.forEach((interaction) => {
+                            var avgDurationItem = {};
+                            if (srcInteraction.source === interaction.source) {
+                              avgDurationItem.text = 'Source';
+                            } else {
+                              avgDurationItem.text = interaction.source;
+                            }
+                            avgDurationItem.value = interaction.avgDuration.toFixed(3) + ' (s)';
+                            nodeDetails.value.items.push(avgDurationItem);
+                        });
+                      }
+
                     uniqueNodes.push(nodeDetails);
                   }
               });
@@ -129,8 +153,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
               edges: this.interactions
             }
 
-            //console.log("updatedPlotData >> ");
-            //console.log(updatedPlotData);
+            console.log("updatedPlotData >> ");
+            console.log(updatedPlotData);
 
             //Update plotting data
             this.setState({ plotData: updatedPlotData });
@@ -245,12 +269,44 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         //height: 400,
         //width: 1200,
         nodeCfg: {
-          size: [150, 25],
+          //size: [180, 25],
           autoWidth: true,
           title: {
             style: {
               fill: '#000',
             },
+          },
+          customContent: (item, group, cfg) => {
+            const { startX, startY } = cfg;
+            const { text, value } = item;
+            let valueStart = 75;
+            if (text.length > 10) {
+              valueStart = 150;
+            };
+            text &&
+              group?.addShape('text', {
+                attrs: {
+                  textBaseline: 'top',
+                  x: startX,
+                  y: startY,
+                  text: text,
+                  fill: '#000',
+                },
+                name: `text-${Math.random()}`,
+              });
+            value &&
+              group?.addShape('text', {
+                attrs: {
+                  textBaseline: 'top',
+                  x: startX + valueStart,
+                  y: startY,
+                  text: value,
+                  fill: '#000',
+                },
+                name: `value-${Math.random()}`,
+              });
+
+            return 10;
           },
         },
         edgeCfg: {
