@@ -64,10 +64,15 @@ export default class FetchBrowserApplications extends React.Component {
     var selectedAppDetails = this.state.selectedApp;
     //console.log(selectedAppDetails);
 
+    const mainGridCSSStyle = {
+        marginLeft: '0px',
+    };
+
     if (selectedAppDetails) {
         const topInteractionsQueryWithAppName = this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',selectedAppDetails.name);
+        //console.log('topInteractionsQueryWithAppName >> ' + topInteractionsQueryWithAppName);
         return (
-          <Grid gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.MEDIUM]} fullWidth fullHeight>
+          <Grid style={mainGridCSSStyle} gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.SMALL]} fullWidth fullHeight>
             <GridItem columnSpan={12}>
               <Stack gapType={Stack.GAP_TYPE.EXTRA_LARGE} horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY} fullWidth fullHeight >
                 <StackItem fullWidth fullHeight >
@@ -90,7 +95,7 @@ export default class FetchBrowserApplications extends React.Component {
               </Stack>
             </GridItem>
             <GridItem columnSpan={12}>
-              <Stack gapType={Stack.GAP_TYPE.EXTRA_LARGE} horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY} fullWidth fullHeight >
+              <Stack gapType={Stack.GAP_TYPE.LARGE} horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY} fullWidth fullHeight >
                 <FetchBrowserApplicationDetails {...selectedAppDetails} />
               </Stack>
             </GridItem>
@@ -120,11 +125,18 @@ export default class FetchBrowserApplications extends React.Component {
                   });
 
                   //console.log("Number of initial page loads >> " + browserInteractions.length);
+                  const journeyGridItemCSSStyle = {
+                      outlineWidth: 'thin',
+                      borderRadius: '25px',
+                      margin: '10px',
+                      padding: '10px',
+                  };
+
 
                   return (
                     <React.Fragment>
                       {browserInteractions.map(browserInteraction => (
-                          <GridItem columnSpan={12}>
+                          <GridItem columnSpan={12} style={journeyGridItemCSSStyle}>
                             <FetchBrowserInteractionAsFlowAnalysisGraph {...browserInteraction} />
                           </GridItem>
                         ))
@@ -141,7 +153,7 @@ export default class FetchBrowserApplications extends React.Component {
         );
     } else {
         return (
-          <Grid gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.MEDIUM]} fullWidth fullHeight>
+          <Grid style={mainGridCSSStyle} gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.SMALL]} fullWidth fullHeight>
             <GridItem columnSpan={12}>
               <Stack gapType={Stack.GAP_TYPE.EXTRA_LARGE} horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY} fullWidth fullHeight >
                 <StackItem fullWidth fullHeight >

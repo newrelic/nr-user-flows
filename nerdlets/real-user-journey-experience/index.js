@@ -27,6 +27,11 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
         ]
     });
 
+    this.appCSSStyle = {
+        margin: '3px',
+    };
+
+
   }
 
   shouldComponentUpdate() {
@@ -36,17 +41,8 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
   render() {
     //console.log("RealUserJourneyExperienceNerdlet.render >> ");
 
-    /*
     return (
-      <div>
-        <h4>Select an Account and browser application to view the real user journey flow</h4>
-        <FetchBrowserApplications />
-      </div>
-    );
-    */
-
-    return (
-      <div>
+      <div style={this.appCSSStyle}>
         <h4>Select an <b>Account</b> and a <b>browser application</b> to view the real user journey flow</h4>
         <PlatformStateContext.Consumer>
           {(platformState) => {
