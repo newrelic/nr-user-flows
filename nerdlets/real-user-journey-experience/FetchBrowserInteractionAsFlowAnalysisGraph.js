@@ -41,6 +41,9 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     this.queryCounter = 0;
     this.plotGraph = false;
+    /** Number of pixels that separate nodes horizontally in the layout. */
+    this.rankSepPixel = 25;
+      
     this.interactions = [
         {"source":browserInteraction.browserInteractionName,
         "srcInteractionName":browserInteraction.browserInteractionName,
@@ -170,6 +173,17 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
             }
             
+            //Update rank sep pixels
+            if (uniqueNodes.length == 2) {
+              this.rankSepPixel = 125;
+            } else if (uniqueNodes.length == 3) {
+              this.rankSepPixel = 90;
+            } else if (uniqueNodes.length == 4) {
+              this.rankSepPixel = 50;
+            } else {
+              this.rankSepPixel = 20;
+            }
+
             const updatedPlotData = {
               nodes: uniqueNodes,
               edges: this.interactions
@@ -179,6 +193,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             //console.log(updatedPlotData);
 
             //Update plotting data
+
             this.setState({ plotData: updatedPlotData });
             this.plotGraph = true;
             this.setState({ render:true });
@@ -381,13 +396,18 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         layout: {
           //maxZoom: 1,
           preventOverlap: true,
-          ranksepFunc: () => 20,
-          nodesepFunc: () => 20,
+          ranksepFunc: () => this.rankSepPixel,
+          nodesepFunc: () => 25,
         },
         //behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node'],
         behaviors: ['drag-node'],
         //theme: 'dark',
         onReady: (graph) => {
+          /*const zoomFactor = 0.25 * this.state.plotData.nodes.length;
+          console.log("zoomFactor : " + zoomFactor);
+          if (zoomFactor < 1) {
+            graph.zoom(zoomFactor);
+          }*/
           graph.on('node:click', (evt) => {
             const item = evt.item;
             //console.log(item);
