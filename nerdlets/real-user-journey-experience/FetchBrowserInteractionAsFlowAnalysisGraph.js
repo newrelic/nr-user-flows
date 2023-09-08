@@ -222,7 +222,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         let totalPath = srcPath + ' -> ' + interaction.target;
         let totalDuration = duration + interaction.avgDuration;
         let stepDisplay = "Step"+stepNumber+":"+interaction.source+" -> "+interaction.target;
-        console.log("stepDisplay : " + stepDisplay);
+        //console.log("stepDisplay : " + stepDisplay);
         let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '"+interaction.srcInteractionName+"' AND targetGroupedUrl = '"+interaction.targetInteractionName+"' AS '"+stepDisplay+"'";
         this.appendChildPath(totalPath, interaction.target, totalDuration, updWhereClauses, nxtStepNumber);
 
