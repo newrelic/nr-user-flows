@@ -161,8 +161,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
               //prepare all paths and e2e durations
               this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
-              var facetWhereClauses = "WHERE previousGroupedUrl LIKE '"+srcInteraction.srcInteractionName+"' AND targetGroupedUrl = '"+srcInteraction.srcInteractionName+"'";
-              this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses);
+              var facetWhereClauses = "WHERE previousGroupedUrl LIKE '"+srcInteraction.srcInteractionName+"' AND targetGroupedUrl = '"+srcInteraction.srcInteractionName+"' AS 'Step0:"+srcInteraction.srcInteractionName+"'";
+              this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses, 1);
               //console.log("All Paths >> ");
               //console.log(this.allInteractionsPaths);
               var allPathTotalDuration = 0;
@@ -204,7 +204,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       }
   }
 
-  appendChildPath(srcPath, src, duration, facetWhereClauses) {
+  appendChildPath(srcPath, src, duration, facetWhereClauses, stepNumber) {
     let interactionsWithThisSource = this.interactions.filter((interaction) => interaction.source === src);
     //console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
     if (interactionsWithThisSource.length == 0) {
@@ -216,11 +216,15 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       this.allInteractionsPaths.push(pathNode);
     } else {
 
+      const nxtStepNumber = stepNumber + 1;
+
       interactionsWithThisSource.forEach((interaction) => {
         let totalPath = srcPath + ' -> ' + interaction.target;
         let totalDuration = duration + interaction.avgDuration;
-        let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '"+interaction.srcInteractionName+"' AND targetGroupedUrl = '"+interaction.targetInteractionName+"'";
-        this.appendChildPath(totalPath, interaction.target, totalDuration, updWhereClauses);
+        let stepDisplay = "Step"+stepNumber+":"+interaction.source+" -> "+interaction.target;
+        console.log("stepDisplay : " + stepDisplay);
+        let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '"+interaction.srcInteractionName+"' AND targetGroupedUrl = '"+interaction.targetInteractionName+"' AS '"+stepDisplay+"'";
+        this.appendChildPath(totalPath, interaction.target, totalDuration, updWhereClauses, nxtStepNumber);
 
       });
 
