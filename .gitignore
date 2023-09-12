@@ -1,0 +1,8 @@
+node_modules*
+tmp*
+*.DS_Store
+dist*
+old*
+.serverless*
+backend/.serverless*
+nerdlets-beta/*

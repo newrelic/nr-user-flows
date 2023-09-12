@@ -30,7 +30,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     this.state = {
       plotData: initPlotData,
-      render:false,
+      render: false,
       accountId: browserInteraction.applicationDetails.accountId,
       appName: browserInteraction.applicationDetails.name,
       browserInteraction: browserInteraction,
@@ -43,26 +43,27 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     this.plotGraph = false;
     /** Number of pixels that separate nodes horizontally in the layout. */
     this.rankSepPixel = 25;
-      
+
     this.interactions = [
-        {"source":browserInteraction.browserInteractionName,
-        "srcInteractionName":browserInteraction.browserInteractionName,
-        "target":browserInteraction.browserInteractionName,
-        "targetInteractionName":browserInteraction.browserInteractionName,
-        "value":browserInteraction.uniqueSessionCount,
-        "avgDuration":browserInteraction.avgDuration
-        }
-      ];
+      {
+        "source": browserInteraction.browserInteractionName,
+        "srcInteractionName": browserInteraction.browserInteractionName,
+        "target": browserInteraction.browserInteractionName,
+        "targetInteractionName": browserInteraction.browserInteractionName,
+        "value": browserInteraction.uniqueSessionCount,
+        "avgDuration": browserInteraction.avgDuration
+      }
+    ];
     this.allInteractionsPaths = [
-        {
-          "path":browserInteraction.browserInteractionName,
-          "duration":browserInteraction.avgDuration
-        }
-      ];
+      {
+        "path": browserInteraction.browserInteractionName,
+        "duration": browserInteraction.avgDuration
+      }
+    ];
     this.allPathsAvgDuration = browserInteraction.avgDuration;
 
     this.appendChildren(browserInteraction.browserInteractionName, browserInteraction.browserInteractionName, true).then(() => {
-        this.afterAppendingChild();
+      this.afterAppendingChild();
     });
 
   }
@@ -74,134 +75,134 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   componentWillReceiveProps(newBrowserInteraction) {
 
     if ((this.state.accountId != null && this.state.accountId != newBrowserInteraction.applicationDetails.accountId)
-        || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)) {
+      || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)) {
 
-        //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
-        //console.log(newBrowserInteraction);
+      //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
+      //console.log(newBrowserInteraction);
 
-        this.plotGraph = false;
-        this.setState({ render:true });
+      this.plotGraph = false;
+      this.setState({ render: true });
 
-        this.initializeBrowserInteractionAppDetails(newBrowserInteraction);
+      this.initializeBrowserInteractionAppDetails(newBrowserInteraction);
     }
 
   }
 
   afterAppendingChild() {
 
-      this.queryCounter = this.queryCounter - 1;
-      //console.log("this.queryCounter >> " + this.queryCounter);
-      if (this.queryCounter === 0) {
+    this.queryCounter = this.queryCounter - 1;
+    //console.log("this.queryCounter >> " + this.queryCounter);
+    if (this.queryCounter === 0) {
 
-            //console.log("this.interactions >> ");
-            //console.log(this.interactions);
+      //console.log("this.interactions >> ");
+      //console.log(this.interactions);
 
-            // remove any duplicate interactions and build nodeDetails.
-            let uniqueNodes = [];
+      // remove any duplicate interactions and build nodeDetails.
+      let uniqueNodes = [];
 
-            // Add First source as Node.
-            const srcInteraction = this.interactions[0];
+      // Add First source as Node.
+      const srcInteraction = this.interactions[0];
+      var nodeDetails = {};
+      nodeDetails.value = {};
+      nodeDetails.id = srcInteraction.source;
+      nodeDetails.value.title = srcInteraction.source;
+      nodeDetails.interactionName = srcInteraction.srcInteractionName;
+      nodeDetails.value.items = [];
+      var avgDurationItem = {};
+      avgDurationItem.text = 'Duration';
+      avgDurationItem.value = srcInteraction.avgDuration.toFixed(3) + ' (s)';
+      nodeDetails.value.items.push(avgDurationItem);
+
+      uniqueNodes.push(nodeDetails);
+
+      if (this.interactions.length > 1) {
+        this.interactions = this.interactions.slice(1);
+
+        //prepare Nodes
+        this.interactions.forEach((thisInteraction) => {
+
+          if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
             var nodeDetails = {};
             nodeDetails.value = {};
-            nodeDetails.id = srcInteraction.source;
-            nodeDetails.value.title = srcInteraction.source;
-            nodeDetails.interactionName = srcInteraction.srcInteractionName;
+            nodeDetails.id = thisInteraction.target;
+            nodeDetails.value.title = thisInteraction.target;
+            nodeDetails.interactionName = thisInteraction.targetInteractionName;
             nodeDetails.value.items = [];
-            var avgDurationItem = {};
-            avgDurationItem.text = 'Duration';
-            avgDurationItem.value = srcInteraction.avgDuration.toFixed(3) + ' (s)';
-            nodeDetails.value.items.push(avgDurationItem);
+
+            let interactionsWithThisTarget = this.interactions.filter((interaction) => interaction.target === thisInteraction.target);
+            //console.log("Interactions for " + thisInteraction.target + " : " + interactionsWithThisTarget.length);
+
+            if (interactionsWithThisTarget.length == 1) {
+              var avgDurationItem = {};
+              avgDurationItem.text = 'Duration';
+              avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
+              nodeDetails.value.items.push(avgDurationItem);
+            } else {
+              // Empty Label Item
+              var avgDurationItem = {};
+              avgDurationItem.text = 'Duration From';
+              avgDurationItem.value = '';
+              nodeDetails.value.items.push(avgDurationItem);
+
+              interactionsWithThisTarget.forEach((interaction) => {
+                var avgDurationItem = {};
+                if (srcInteraction.source === interaction.source) {
+                  avgDurationItem.text = 'Source';
+                } else {
+                  avgDurationItem.text = interaction.source;
+                }
+                avgDurationItem.value = interaction.avgDuration.toFixed(3) + ' (s)';
+                nodeDetails.value.items.push(avgDurationItem);
+              });
+            }
 
             uniqueNodes.push(nodeDetails);
+          }
+        });
 
-            if (this.interactions.length > 1) {
-              this.interactions = this.interactions.slice(1);
+        //prepare all paths and e2e durations
+        this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
+        var facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'Step0:" + srcInteraction.srcInteractionName + "'";
+        this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses, 1);
+        //console.log("All Paths >> ");
+        //console.log(this.allInteractionsPaths);
+        var allPathTotalDuration = 0;
+        this.allInteractionsPaths.forEach((path) => {
+          allPathTotalDuration = allPathTotalDuration + path.duration;
+        });
+        this.allPathsAvgDuration = allPathTotalDuration / this.allInteractionsPaths.length;
 
-              //prepare Nodes
-              this.interactions.forEach((thisInteraction) => {
-
-                  if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
-                    var nodeDetails = {};
-                    nodeDetails.value = {};
-                    nodeDetails.id = thisInteraction.target;
-                    nodeDetails.value.title = thisInteraction.target;
-                    nodeDetails.interactionName = thisInteraction.targetInteractionName;
-                    nodeDetails.value.items = [];
-
-                    let interactionsWithThisTarget = this.interactions.filter((interaction) => interaction.target === thisInteraction.target);
-                    //console.log("Interactions for " + thisInteraction.target + " : " + interactionsWithThisTarget.length);
-
-                    if (interactionsWithThisTarget.length == 1) {
-                        var avgDurationItem = {};
-                        avgDurationItem.text = 'Duration';
-                        avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
-                        nodeDetails.value.items.push(avgDurationItem);
-                      } else {
-                        // Empty Label Item
-                        var avgDurationItem = {};
-                        avgDurationItem.text = 'Duration From';
-                        avgDurationItem.value = '';
-                        nodeDetails.value.items.push(avgDurationItem);
-
-                        interactionsWithThisTarget.forEach((interaction) => {
-                            var avgDurationItem = {};
-                            if (srcInteraction.source === interaction.source) {
-                              avgDurationItem.text = 'Source';
-                            } else {
-                              avgDurationItem.text = interaction.source;
-                            }
-                            avgDurationItem.value = interaction.avgDuration.toFixed(3) + ' (s)';
-                            nodeDetails.value.items.push(avgDurationItem);
-                        });
-                      }
-
-                    uniqueNodes.push(nodeDetails);
-                  }
-              });
-
-              //prepare all paths and e2e durations
-              this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
-              var facetWhereClauses = "WHERE previousGroupedUrl LIKE '"+srcInteraction.srcInteractionName+"' AND targetGroupedUrl = '"+srcInteraction.srcInteractionName+"' AS 'Step0:"+srcInteraction.srcInteractionName+"'";
-              this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses, 1);
-              //console.log("All Paths >> ");
-              //console.log(this.allInteractionsPaths);
-              var allPathTotalDuration = 0;
-              this.allInteractionsPaths.forEach((path) => {
-                allPathTotalDuration = allPathTotalDuration + path.duration;
-              });
-              this.allPathsAvgDuration = allPathTotalDuration / this.allInteractionsPaths.length;
-
-            }
-            
-            //Update rank sep pixels
-            if (uniqueNodes.length == 2) {
-              this.rankSepPixel = 125;
-            } else if (uniqueNodes.length == 3) {
-              this.rankSepPixel = 90;
-            } else if (uniqueNodes.length == 4) {
-              this.rankSepPixel = 50;
-            } else {
-              this.rankSepPixel = 20;
-            }
-
-            const updatedPlotData = {
-              nodes: uniqueNodes,
-              edges: this.interactions
-            }
-
-            //console.log("updatedPlotData >> ");
-            //console.log(updatedPlotData);
-
-            //Update plotting data
-
-            this.setState({ plotData: updatedPlotData });
-            this.plotGraph = true;
-            this.setState({ render:true });
-
-            setTimeout(() => {
-              this.setState({ render:false });
-            },100);
       }
+
+      //Update rank sep pixels
+      if (uniqueNodes.length == 2) {
+        this.rankSepPixel = 125;
+      } else if (uniqueNodes.length == 3) {
+        this.rankSepPixel = 90;
+      } else if (uniqueNodes.length == 4) {
+        this.rankSepPixel = 50;
+      } else {
+        this.rankSepPixel = 20;
+      }
+
+      const updatedPlotData = {
+        nodes: uniqueNodes,
+        edges: this.interactions
+      }
+
+      //console.log("updatedPlotData >> ");
+      //console.log(updatedPlotData);
+
+      //Update plotting data
+
+      this.setState({ plotData: updatedPlotData });
+      this.plotGraph = true;
+      this.setState({ render: true });
+
+      setTimeout(() => {
+        this.setState({ render: false });
+      }, 100);
+    }
   }
 
   appendChildPath(srcPath, src, duration, facetWhereClauses, stepNumber) {
@@ -211,7 +212,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       var pathNode = {};
       pathNode.path = srcPath;
       pathNode.duration = duration;
-      pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '"+this.state.appName+"' and category IN ('Initial page load','Route change') FACET CASES ("+facetWhereClauses+")) SINCE 1 week ago";
+      pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) SINCE 1 week ago";
       //console.log(pathNode.nrql);
       this.allInteractionsPaths.push(pathNode);
     } else {
@@ -221,9 +222,9 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       interactionsWithThisSource.forEach((interaction) => {
         let totalPath = srcPath + ' -> ' + interaction.target;
         let totalDuration = duration + interaction.avgDuration;
-        let stepDisplay = "Step"+stepNumber+":"+interaction.source+" -> "+interaction.target;
+        let stepDisplay = "Step" + stepNumber + ":" + interaction.source + " -> " + interaction.target;
         //console.log("stepDisplay : " + stepDisplay);
-        let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '"+interaction.srcInteractionName+"' AND targetGroupedUrl = '"+interaction.targetInteractionName+"' AS '"+stepDisplay+"'";
+        let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '" + interaction.srcInteractionName + "' AND targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + stepDisplay + "'";
         this.appendChildPath(totalPath, interaction.target, totalDuration, updWhereClauses, nxtStepNumber);
 
       });
@@ -238,14 +239,14 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   isValidEdge(interactionsArr, thisSrcInteractionName, thisDestInteractionName) {
 
     //Check if the edge is duplicate
-    if(interactionsArr.find((edge) => (edge.srcInteractionName === thisSrcInteractionName && edge.targetInteractionName === thisDestInteractionName))) {
+    if (interactionsArr.find((edge) => (edge.srcInteractionName === thisSrcInteractionName && edge.targetInteractionName === thisDestInteractionName))) {
       //console.log("Is a duplicate edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
     //Check if an edge is cyclic. This will lead to infinite loop and the rendering makes it infinite
     //a -> b, b -> a
-    if(interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName && edge.targetInteractionName === thisSrcInteractionName))) {
+    if (interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName && edge.targetInteractionName === thisSrcInteractionName))) {
       //console.log("Is a cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
@@ -255,74 +256,74 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
   async appendChildren(interactionName, srcDisplayName, isFirstExecution) {
 
-      //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.appendChildren >>>> " + interactionName);
-      //let browserInteractionName = interactionName.replaceAll('*', '%');
-      //console.log("browserInteractionName >>>> " + JSON.stringify(browserInteractionName));
+    //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.appendChildren >>>> " + interactionName);
+    //let browserInteractionName = interactionName.replaceAll('*', '%');
+    //console.log("browserInteractionName >>>> " + JSON.stringify(browserInteractionName));
 
-      let interactionsQuery = this.INTERACTIONS_QUERY.replace('$BR_APP_NAME$',this.state.appName);
-      interactionsQuery = interactionsQuery.replace('$PREVIOUS_URL$',interactionName);
-      //console.log("appendChild Query >>>> " + interactionsQuery);
+    let interactionsQuery = this.INTERACTIONS_QUERY.replace('$BR_APP_NAME$', this.state.appName);
+    interactionsQuery = interactionsQuery.replace('$PREVIOUS_URL$', interactionName);
+    //console.log("appendChild Query >>>> " + interactionsQuery);
 
-      this.queryCounter = this.queryCounter + 1;
-      const response = await NrqlQuery.query({
-        accountIds:[this.state.accountId],
-        formatType: NrqlQuery.FORMAT_TYPE.RAW,
-        query:interactionsQuery
+    this.queryCounter = this.queryCounter + 1;
+    const response = await NrqlQuery.query({
+      accountIds: [this.state.accountId],
+      formatType: NrqlQuery.FORMAT_TYPE.RAW,
+      query: interactionsQuery
+    });
+    //console.log("query data >>>> " + response + " ~ " + JSON.stringify(response.data.facets));
+
+    if (response && response.data && response.data.facets.length > 0) {
+      //add children details
+      //console.log("Num Of Children > " + response.data.facets.length);
+      response.data.facets.forEach((facetInfo) => {
+        //define child Display Name
+        let childDisplayName = facetInfo.name[0];
+        const childUrlDomain = facetInfo.name[1];
+        if (interactionName.startsWith(childUrlDomain)) {
+          childDisplayName = childDisplayName.replaceAll(childUrlDomain, '');
+          //strip off portNumber
+          const indx = childDisplayName.indexOf('/');
+          if (indx > 0) {
+            childDisplayName = childDisplayName.substring(indx);
+          }
+        }
+
+        var childBrowserInteractionDetail = {};
+        childBrowserInteractionDetail.source = srcDisplayName;
+        childBrowserInteractionDetail.srcInteractionName = interactionName;
+        childBrowserInteractionDetail.target = childDisplayName;
+        childBrowserInteractionDetail.targetInteractionName = facetInfo.name[0];
+        childBrowserInteractionDetail.value = facetInfo.results[0].uniqueCount;
+        childBrowserInteractionDetail.avgDuration = facetInfo.results[1].average;
+
+        if (this.isValidEdge(this.interactions, interactionName, facetInfo.name[0])) {
+          this.interactions.push(childBrowserInteractionDetail);
+          this.appendChildren(facetInfo.name[0], childDisplayName, false).then(() => {
+            //this.setState({ render:false });
+            //this.queryCounter = this.queryCounter - 1;
+            this.afterAppendingChild();
+
+          });
+        }
+
       });
-      //console.log("query data >>>> " + response + " ~ " + JSON.stringify(response.data.facets));
 
-      if (response && response.data && response.data.facets.length > 0) {
-        //add children details
-        //console.log("Num Of Children > " + response.data.facets.length);
-        response.data.facets.forEach((facetInfo) => {
-            //define child Display Name
-            let childDisplayName = facetInfo.name[0];
-            const childUrlDomain = facetInfo.name[1];
-            if (interactionName.startsWith(childUrlDomain)) {
-              childDisplayName = childDisplayName.replaceAll(childUrlDomain,'');
-              //strip off portNumber
-              const indx = childDisplayName.indexOf('/');
-              if (indx > 0) {
-                childDisplayName = childDisplayName.substring(indx);
-              }
-            }
-
-            var childBrowserInteractionDetail = {};
-            childBrowserInteractionDetail.source = srcDisplayName;
-            childBrowserInteractionDetail.srcInteractionName = interactionName;
-            childBrowserInteractionDetail.target = childDisplayName;
-            childBrowserInteractionDetail.targetInteractionName = facetInfo.name[0];
-            childBrowserInteractionDetail.value = facetInfo.results[0].uniqueCount;
-            childBrowserInteractionDetail.avgDuration = facetInfo.results[1].average;
-
-            if (this.isValidEdge(this.interactions, interactionName, facetInfo.name[0])) {
-              this.interactions.push(childBrowserInteractionDetail);
-              this.appendChildren(facetInfo.name[0], childDisplayName, false).then(() => {
-                  //this.setState({ render:false });
-                  //this.queryCounter = this.queryCounter - 1;
-                  this.afterAppendingChild();
-
-              });
-            }
-            
-        });
-
-      }
+    }
 
   }
 
   renderInteractionDetails(browserInteractionDetail) {
-      //console.log('renderInteractionDetails >>');
-      this.setState({ browserInteractionDetail:browserInteractionDetail });
-      this.setState({ displayBrowserInteractionDetail:true });
-      this.setState({ render:true });
+    //console.log('renderInteractionDetails >>');
+    this.setState({ browserInteractionDetail: browserInteractionDetail });
+    this.setState({ displayBrowserInteractionDetail: true });
+    this.setState({ render: true });
 
-      setTimeout(() => {
-        this.setState({ render:false });
-        this.setState({ displayBrowserInteractionDetail:false });
+    setTimeout(() => {
+      this.setState({ render: false });
+      this.setState({ displayBrowserInteractionDetail: false });
 
-      },50);
-      
+    }, 50);
+
   }
 
   showAllPaths(clickEvt) {
@@ -332,13 +333,13 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //this.setState({ accountId: clickedItem.accountId });
     //clickEvt.preventDefault();
     this.setState({ displayE2EFlows: true });
-    this.setState({ render:true });
+    this.setState({ render: true });
 
     setTimeout(() => {
       this.setState({ render: false });
       this.setState({ displayE2EFlows: false });
 
-    },50);
+    }, 50);
 
   }
 
@@ -347,95 +348,95 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.render >> " + JSON.stringify(this.state.plotData));
 
     const config = {
-        data: this.state.plotData,    
-        height: 400,
-        //width: 400,
-        nodeCfg: {
-          //size: [180, 25],
-          autoWidth: true,
-          title: {
-            style: {
-              fill: '#000',
-            },
-          },
-          customContent: (item, group, cfg) => {
-            const { startX, startY } = cfg;
-            const { text, value } = item;
-            let valueStart = 75;
-            if (text.length > 10) {
-              valueStart = 150;
-            };
-            text &&
-              group?.addShape('text', {
-                attrs: {
-                  textBaseline: 'top',
-                  x: startX,
-                  y: startY,
-                  text: text,
-                  fill: '#000',
-                },
-                name: `text-${Math.random()}`,
-              });
-            value &&
-              group?.addShape('text', {
-                attrs: {
-                  textBaseline: 'top',
-                  x: startX + valueStart,
-                  y: startY,
-                  text: value,
-                  fill: '#000',
-                },
-                name: `value-${Math.random()}`,
-              });
-
-            return 10;
-          },
-        },
-        edgeCfg: {
-          endArrow: true,
+      data: this.state.plotData,
+      height: 400,
+      //width: 400,
+      nodeCfg: {
+        //size: [180, 25],
+        autoWidth: true,
+        title: {
           style: {
-            stroke:'#c86bdd',
+            fill: '#000',
           },
         },
-        layout: {
-          //maxZoom: 1,
-          preventOverlap: true,
-          ranksepFunc: () => this.rankSepPixel,
-          nodesepFunc: () => 25,
-        },
-        //behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node'],
-        behaviors: ['drag-node'],
-        //theme: 'dark',
-        onReady: (graph) => {
-          /*const zoomFactor = 0.25 * this.state.plotData.nodes.length;
-          console.log("zoomFactor : " + zoomFactor);
-          if (zoomFactor < 1) {
-            graph.zoom(zoomFactor);
-          }*/
-          graph.on('node:click', (evt) => {
-            const item = evt.item;
-            //console.log(item);
-            //console.log('Type of item : ' + item._cfg.type);
-            //console.log(item._cfg.model.value.title + ' ~ ' + item._cfg.model.value.interactionName);
-            //console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
-            //console.log(this.state.accountId + ' ~ ' + this.state.appName);
+        customContent: (item, group, cfg) => {
+          const { startX, startY } = cfg;
+          const { text, value } = item;
+          let valueStart = 75;
+          if (text.length > 10) {
+            valueStart = 150;
+          };
+          text &&
+            group?.addShape('text', {
+              attrs: {
+                textBaseline: 'top',
+                x: startX,
+                y: startY,
+                text: text,
+                fill: '#000',
+              },
+              name: `text-${Math.random()}`,
+            });
+          value &&
+            group?.addShape('text', {
+              attrs: {
+                textBaseline: 'top',
+                x: startX + valueStart,
+                y: startY,
+                text: value,
+                fill: '#000',
+              },
+              name: `value-${Math.random()}`,
+            });
 
-            var browserInteractionDetail = {};
-            browserInteractionDetail.accountId = this.state.accountId;
-            browserInteractionDetail.appName = this.state.appName;
-            browserInteractionDetail.browserInteractionName = item._cfg.model.interactionName;
-            
-            this.renderInteractionDetails(browserInteractionDetail);
-          });
-          graph.off('canvas:contextmenu', (evt) => {
-            evt.preventDefault();
-          });
+          return 10;
         },
-      };
+      },
+      edgeCfg: {
+        endArrow: true,
+        style: {
+          stroke: '#c86bdd',
+        },
+      },
+      layout: {
+        //maxZoom: 1,
+        preventOverlap: true,
+        ranksepFunc: () => this.rankSepPixel,
+        nodesepFunc: () => 25,
+      },
+      //behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node'],
+      behaviors: ['drag-node'],
+      //theme: 'dark',
+      onReady: (graph) => {
+        /*const zoomFactor = 0.25 * this.state.plotData.nodes.length;
+        console.log("zoomFactor : " + zoomFactor);
+        if (zoomFactor < 1) {
+          graph.zoom(zoomFactor);
+        }*/
+        graph.on('node:click', (evt) => {
+          const item = evt.item;
+          //console.log(item);
+          //console.log('Type of item : ' + item._cfg.type);
+          //console.log(item._cfg.model.value.title + ' ~ ' + item._cfg.model.value.interactionName);
+          //console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
+          //console.log(this.state.accountId + ' ~ ' + this.state.appName);
+
+          var browserInteractionDetail = {};
+          browserInteractionDetail.accountId = this.state.accountId;
+          browserInteractionDetail.appName = this.state.appName;
+          browserInteractionDetail.browserInteractionName = item._cfg.model.interactionName;
+
+          this.renderInteractionDetails(browserInteractionDetail);
+        });
+        graph.off('canvas:contextmenu', (evt) => {
+          evt.preventDefault();
+        });
+      },
+    };
 
     const browserInteractionDetail = this.state.browserInteractionDetail;
     const allPaths = {
-     interactionPaths: this.allInteractionsPaths
+      interactionPaths: this.allInteractionsPaths
     };
 
     const avgDurationStyle = {
@@ -444,17 +445,17 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       fontSize: '14px',
     }
 
-    if (this.plotGraph ) {
-        return (
-              <React.Fragment>
-                <div style={avgDurationStyle}>Average end to end duration is <b>{this.allPathsAvgDuration.toFixed(3) + ' (s)'}</b>&nbsp;&nbsp;<Link onClick={(evt) => this.showAllPaths(evt)}>Click here</Link> for individual journey details.</div>
-                { this.state.displayE2EFlows && <FetchBrowserInteractionFlowDetails {...allPaths} /> }
-                <FlowAnalysisGraph {...config} />
-                { this.state.displayBrowserInteractionDetail && <FetchBrowserInteractionDetails {...browserInteractionDetail} /> }
-              </React.Fragment>
-        );
+    if (this.plotGraph) {
+      return (
+        <React.Fragment>
+          <div style={avgDurationStyle}>Average end to end duration is <b>{this.allPathsAvgDuration.toFixed(3) + ' (s)'}</b>&nbsp;&nbsp;<Link onClick={(evt) => this.showAllPaths(evt)}>Click here</Link> for individual journey details.</div>
+          {this.state.displayE2EFlows && <FetchBrowserInteractionFlowDetails {...allPaths} accountId={this.state.accountId} />}
+          <FlowAnalysisGraph {...config} />
+          {this.state.displayBrowserInteractionDetail && <FetchBrowserInteractionDetails {...browserInteractionDetail} />}
+        </React.Fragment>
+      );
     } else {
-        return <Spinner type={Spinner.TYPE.DOT} spacingType={[Spinner.SPACING_TYPE.EXTRA_LARGE]} />
+      return <Spinner type={Spinner.TYPE.DOT} spacingType={[Spinner.SPACING_TYPE.EXTRA_LARGE]} />
     }
   }
 

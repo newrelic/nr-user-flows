@@ -1,9 +1,24 @@
 import React from 'react';
 import Modal from 'react-modal';
 import CopyToClipboard from 'react-copy-to-clipboard';
-import { NrqlQuery, 
-        Spinner, HeadingText, Button, Toast,
-        Table, TableHeader, TableHeaderCell, TableRow, TableRowCell, MetricTableRowCell } from 'nr1';
+import {
+  NrqlQuery,
+  Spinner, HeadingText, Button, Toast, navigation,
+  Table, TableHeader, TableHeaderCell, TableRow, TableRowCell, MetricTableRowCell
+} from 'nr1';
+
+function openChartBuilder({ query, accountId }) {
+  const nerdlet = {
+    id: 'data-exploration.query-builder',
+    urlState: {
+      initialActiveInterface: 'nrqlEditor',
+      initialAccountId: accountId,
+      initialNrqlValue: query,
+      isViewingQuery: true
+    }
+  };
+  navigation.openStackedNerdlet(nerdlet);
+}
 
 export default class FetchBrowserInteractionFlowDetails extends React.Component {
 
@@ -32,18 +47,18 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
     };
 
     this.modalHeaderCSSStyle = {
-        backgroundColor: '#000',
-        color: '#fff',
-        margin: '0px',
-        padding: '10px',
+      backgroundColor: '#000',
+      color: '#fff',
+      margin: '0px',
+      padding: '10px',
     };
 
     this.tableCSSStyle = {
-        //padding: '20px',
+      //padding: '20px',
     };
 
     this.tableHeaderCSSStyle = {
-        color: '#000',
+      color: '#000',
     };
 
   }
@@ -54,6 +69,7 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
       hidden: false,
       mounted: true,
       open: true,
+      accountId: allPaths.accountId
     };
 
   }
@@ -90,29 +106,31 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
     return (
       <>
         {this.state.mounted && (
-            <Modal isOpen={this.state.open} onRequestClose={this._onClose} onAfterClose={this._onHideEnd} style={this.modalCSSStyle} ariaHideApp={false} >
-              <HeadingText type={HeadingText.TYPE.HEADING_3} style={this.modalHeaderCSSStyle}>End to end Journey flows</HeadingText>
+          <Modal isOpen={this.state.open} onRequestClose={this._onClose} onAfterClose={this._onHideEnd} style={this.modalCSSStyle} ariaHideApp={false} >
+            <HeadingText type={HeadingText.TYPE.HEADING_3} style={this.modalHeaderCSSStyle}>End to end Journey flows</HeadingText>
 
-                <Table items={e2ePaths} style={this.tableCSSStyle} > 
-                    <TableHeader style={this.tableHeaderCSSStyle}>
-                        <TableHeaderCell value={({ item }) => item.path} width="fit-content">Flow Path</TableHeaderCell>
-                        <TableHeaderCell alignmentType={TableHeaderCell.ALIGNMENT_TYPE.RIGHT} width="100px">Total duration</TableHeaderCell>
-                        <TableHeaderCell width="150px">NRQL</TableHeaderCell>
-                    </TableHeader>
+            <Table items={e2ePaths} style={this.tableCSSStyle} >
+              <TableHeader style={this.tableHeaderCSSStyle}>
+                <TableHeaderCell value={({ item }) => item.path} width="fit-content">Flow Path</TableHeaderCell>
+                <TableHeaderCell alignmentType={TableHeaderCell.ALIGNMENT_TYPE.RIGHT} width="100px">Total duration</TableHeaderCell>
+                <TableHeaderCell width="150px">NRQL</TableHeaderCell>
+              </TableHeader>
 
-                    {({ item }) => (
-                        <TableRow>
-                          <TableRowCell>{item.path}</TableRowCell>
-                          <MetricTableRowCell type={MetricTableRowCell.TYPE.SECONDS} value={item.duration.toFixed(3)} />
-                          <TableRowCell><CopyToClipboard text={item.nrql} onCopy={() => this.displayToastMessage()}><Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL}> Copy NRQL to Clipboard </Button></CopyToClipboard></TableRowCell>
-                        </TableRow>
-                    )}
-                </Table>
-            </Modal>
+              {({ item }) => (
+                <TableRow>
+                  <TableRowCell>{item.path}</TableRowCell>
+                  <MetricTableRowCell type={MetricTableRowCell.TYPE.SECONDS} value={item.duration.toFixed(3)} />
+                  <TableRowCell>
+                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.nrql, accountId: this.state.accountId })}> View in Chart Builder</Button>
+                  </TableRowCell>
+                </TableRow>
+              )}
+            </Table>
+          </Modal>
         )}
       </>
     );
- 
+
 
   }
 }
