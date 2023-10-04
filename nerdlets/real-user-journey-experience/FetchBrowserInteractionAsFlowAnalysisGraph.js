@@ -1,11 +1,15 @@
 import React from 'react';
-import { NrqlQuery, Spinner, Link } from 'nr1';
+import { NrqlQuery, Spinner, Link, navigation } from 'nr1';
 
 import { FlowAnalysisGraph } from '@ant-design/graphs';
 import FetchBrowserInteractionDetails from './FetchBrowserInteractionDetails';
 import FetchBrowserInteractionFlowDetails from './FetchBrowserInteractionFlowDetails'
 // https://charts.ant.design/en/examples/relation-graph/flow-analysis-graph/#type
 // https://charts.ant.design/en/manual/getting-started
+
+
+
+
 export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Component {
 
   constructor(browserInteraction) {
@@ -14,13 +18,14 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.constructor >> " + JSON.stringify(browserInteraction));
 
     //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, entityGuid, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
 
     this.initializeBrowserInteractionAppDetails(browserInteraction);
 
   }
 
   initializeBrowserInteractionAppDetails(browserInteraction) {
+
 
     const initPlotData = {
       nodes: [],
@@ -31,6 +36,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     this.state = {
       plotData: initPlotData,
       render: false,
+      entityGuid: browserInteraction.applicationDetails.guid,
       accountId: browserInteraction.applicationDetails.accountId,
       appName: browserInteraction.applicationDetails.name,
       browserInteraction: browserInteraction,
@@ -51,7 +57,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         "target": browserInteraction.browserInteractionName,
         "targetInteractionName": browserInteraction.browserInteractionName,
         "value": browserInteraction.uniqueSessionCount,
-        "avgDuration": browserInteraction.avgDuration
+        "avgDuration": browserInteraction.avgDuration,
+        "entityGuid": browserInteraction.applicationDetails.guid
       }
     ];
     this.allInteractionsPaths = [
@@ -313,16 +320,49 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   }
 
   renderInteractionDetails(browserInteractionDetail) {
-    //console.log('renderInteractionDetails >>');
-    this.setState({ browserInteractionDetail: browserInteractionDetail });
-    this.setState({ displayBrowserInteractionDetail: true });
-    this.setState({ render: true });
 
-    setTimeout(() => {
-      this.setState({ render: false });
-      this.setState({ displayBrowserInteractionDetail: false });
+    const nerdlet = {
+      id: 'page-views.drilldown',
+      urlState: {
+        "chartFilters": "",
+        "drilldownTab": "AJAX requests",
+        "entityGuid": this.state.entityGuid,
+        "groupBy": browserInteractionDetail.browserInteractionName,
+        "groupByAttribute": "browserInteractionName",
+        "searchAjax": "",
+        "viewType": "SPA"
+      }
+    };
 
-    }, 50);
+    navigation.openStackedNerdlet(nerdlet);
+
+
+    // console.log(this.state.entityGuid)
+    // console.log("browserInteractionName", browserInteractionDetail.browserInteractionName);
+
+    // {
+    //   "id": "page-views.drilldown",
+    //   "urlState": {
+    //     "chartFilters": "",
+    //     "drilldownTab": "AJAX requests",
+    //     "entityGuid": "MTYwNjg2MnxCUk9XU0VSfEFQUExJQ0FUSU9OfDExMjAxODg3MjA",
+    //     "groupBy": "relicstaurants.experimental-newrelic.com:80/restaurants",
+    //     "groupByAttribute": "browserInteractionName",
+    //     "searchAjax": "",
+    //     "viewType": "SPA"
+    //   }
+    // }
+
+
+    // this.setState({ browserInteractionDetail: browserInteractionDetail });
+    // this.setState({ displayBrowserInteractionDetail: true });
+    // this.setState({ render: true });
+
+    // setTimeout(() => {
+    //   this.setState({ render: false });
+    //   this.setState({ displayBrowserInteractionDetail: false });
+
+    // }, 50);
 
   }
 
@@ -415,7 +455,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         }*/
         graph.on('node:click', (evt) => {
           const item = evt.item;
-          //console.log(item);
+
+          console.log(item);
           //console.log('Type of item : ' + item._cfg.type);
           //console.log(item._cfg.model.value.title + ' ~ ' + item._cfg.model.value.interactionName);
           //console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
