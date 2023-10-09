@@ -390,6 +390,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
                 y: startY,
                 text: text,
                 fill: '#000',
+                cursor: 'pointer'
               },
               name: `text-${Math.random()}`,
             });
@@ -401,11 +402,18 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
                 y: startY,
                 text: value,
                 fill: '#000',
+                cursor: 'pointer'
               },
               name: `value-${Math.random()}`,
             });
 
             return 10;
+        },
+        nodeStateStyles: {
+          hover: {
+            lineWidth: 2,
+            cursor: 'pointer'
+          },
         },
       },
       edgeCfg: {
