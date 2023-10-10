@@ -121,7 +121,7 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
                   <TableRowCell>{item.path}</TableRowCell>
                   <MetricTableRowCell type={MetricTableRowCell.TYPE.SECONDS} value={item.duration.toFixed(3)} />
                   <TableRowCell>
-                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.nrql, accountId: this.state.accountId })}> View in Chart Builder</Button>
+                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.nrql, accountId: this.state.accountId })}> Open Query Builder</Button>
                   </TableRowCell>
                 </TableRow>
               )}
