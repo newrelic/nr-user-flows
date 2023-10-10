@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   nerdlet,
   PlatformStateContext,
-  EntitiesByNameQuery, NrqlQuery,
+  EntitiesByNameQuery, NrqlQuery, useNrqlQuery,
   Dropdown, DropdownItem,
   Stack, StackItem, Grid, GridItem,
   Tile, HeadingText, BlockText, Spinner
@@ -55,6 +55,36 @@ export default class FetchBrowserApplications extends React.Component {
     this.setState({ selectedAppName: clickEvt.target.textContent });
     this.setState({ selectedApp: clickedItem });
     this.setState({ accountId: clickedItem.accountId });
+
+    let topInteractionsQueryWithAppName = !!this.state.selectedApp ? this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',this.state.selectedApp.name) : '';
+
+    let browserInteractions2;
+
+    NrqlQuery.query({
+      accountIds: [this.state.accountId],
+      query: topInteractionsQueryWithAppName,
+      formatType: NrqlQuery.FORMAT_TYPE.RAW
+    }).then((data) => {
+      browserInteractions2 = data.facets.map((facetInfo, indx) => {
+
+        var browserInteractionDetail = {};
+        browserInteractionDetail.id = 'A'+indx;
+        browserInteractionDetail.browserInteractionName = facetInfo.name[0];
+        browserInteractionDetail.urlDomain = facetInfo.name[1];
+        browserInteractionDetail.category = facetInfo.name[2];
+        browserInteractionDetail.trigger = facetInfo.name[3];
+        browserInteractionDetail.uniqueSessionCount = facetInfo.results[0].uniqueCount;
+        browserInteractionDetail.avgDuration = facetInfo.results[1].average;
+
+        browserInteractionDetail.applicationDetails = this.state.selectedApp;
+
+        return browserInteractionDetail;
+      });
+
+      console.log(`new block ${browserInteractions2}`);
+
+    })
+
   }
 
   render() {
@@ -102,13 +132,14 @@ export default class FetchBrowserApplications extends React.Component {
             <NrqlQuery accountIds={[this.state.accountId]} query={topInteractionsQueryWithAppName} formatType={NrqlQuery.FORMAT_TYPE.RAW} >
               {({ loading, data }) => {
                 if (loading) {
+                  console.log('it is loading', loading)
                   return <Spinner inline />
                 }
                 if (!loading && data) {
 
                   //console.log("FetchBrowserApplications.render - data >> " + JSON.stringify(data));
-                  const browserInteractions = [];
-                  data.facets.forEach((facetInfo, indx) => {
+                  console.log('is loading', loading)
+                  const browserInteractions =    data.facets.map((facetInfo, indx) => {
 
                     var browserInteractionDetail = {};
                     browserInteractionDetail.id = 'A'+indx;
@@ -121,8 +152,24 @@ export default class FetchBrowserApplications extends React.Component {
 
                     browserInteractionDetail.applicationDetails = this.state.selectedApp;
 
-                    browserInteractions.push(browserInteractionDetail);
+                    return browserInteractionDetail;
                   });
+
+                  // data.facets.forEach((facetInfo, indx) => {
+
+                  //   var browserInteractionDetail = {};
+                  //   browserInteractionDetail.id = 'A'+indx;
+                  //   browserInteractionDetail.browserInteractionName = facetInfo.name[0];
+                  //   browserInteractionDetail.urlDomain = facetInfo.name[1];
+                  //   browserInteractionDetail.category = facetInfo.name[2];
+                  //   browserInteractionDetail.trigger = facetInfo.name[3];
+                  //   browserInteractionDetail.uniqueSessionCount = facetInfo.results[0].uniqueCount;
+                  //   browserInteractionDetail.avgDuration = facetInfo.results[1].average;
+
+                  //   browserInteractionDetail.applicationDetails = this.state.selectedApp;
+
+                  //   browserInteractions.push(browserInteractionDetail);
+                  // });
 
                   //console.log("Number of initial page loads >> " + browserInteractions.length);
                   const journeyGridItemCSSStyle = {
