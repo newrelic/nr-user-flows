@@ -13,7 +13,6 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
 
     nerdlet.setConfig({
       accountPicker: true,
-      //marking time picker as false. All queries are hardcoded to since 10 days ago.
       timePicker: true,
       timePickerRanges: [
         { label: "30 minutes", offset: 1800000 }, 

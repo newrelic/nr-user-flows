@@ -2,7 +2,6 @@ import React from 'react';
 import { NrqlQuery, Spinner, Link, navigation } from 'nr1';
 
 import { FlowAnalysisGraph } from '@ant-design/graphs';
-import FetchBrowserInteractionDetails from './FetchBrowserInteractionDetails';
 import FetchBrowserInteractionFlowDetails from './FetchBrowserInteractionFlowDetails'
 // https://charts.ant.design/en/examples/relation-graph/flow-analysis-graph/#type
 // https://charts.ant.design/en/manual/getting-started
@@ -226,7 +225,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       var pathNode = {};
       pathNode.path = srcPath;
       pathNode.duration = duration;
-      pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) SINCE 1 week ago";
+      pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
       //console.log(pathNode.nrql);
       this.allInteractionsPaths.push(pathNode);
     } else {
