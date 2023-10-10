@@ -11,28 +11,28 @@ export default class FetchBrowserApplicationDetails extends React.Component {
       application: appDetails
     };
 
-    this.shouldRender = 1;
+    this.shouldRender = 0;
 
-    this.queryBrwsrInteractionDataAvailableFrom = "FROM BrowserInteraction SELECT earliest(timestamp) WHERE appName = '$BR_APP_NAME$' SINCE 4 months ago";
-    this.queryBrwsrInteractionUniqueCounts = "FROM BrowserInteraction SELECT uniqueCount(browserInteractionId) as uniqIntrctins, uniqueCount(session) as uniqSessions WHERE appName = '$BR_APP_NAME$' SINCE 1 week ago";
+    this.queryBrwsrInteractionDataAvailableFrom = "FROM BrowserInteraction SELECT earliest(timestamp) WHERE appName = '$BR_APP_NAME$' SINCE 3 months ago";
+    //this.queryBrwsrInteractionUniqueCounts = "FROM BrowserInteraction SELECT uniqueCount(browserInteractionId) as uniqIntrctins, uniqueCount(session) as uniqSessions WHERE appName = '$BR_APP_NAME$' SINCE 1 week ago";
+    this.queryBrwsrInteractionUniqueCounts = "FROM BrowserInteraction SELECT uniqueCount(browserInteractionId) as uniqIntrctins, uniqueCount(session) as uniqSessions WHERE appName = '$BR_APP_NAME$' $TIME_RANGE$";
 
   }
 
   componentWillReceiveProps(newAppDetails) {
     //console.log("FetchBrowserApplicationDetails.componentWillReceiveProps >> " + JSON.stringify(newAppDetails));
-    this.setState({ application: newAppDetails });
 
-    if (this.state.application == null && newAppDetails) {
-      this.shouldRender = 0;
-    } else if (this.state.application && newAppDetails
-                && (this.state.application.accountId != newAppDetails.accountId || this.state.application.name != newAppDetails.name)
-                ) {
+    if ((this.state.application == null && newAppDetails)
+        || (this.state.application && newAppDetails 
+              && (this.state.application.accountId != newAppDetails.accountId 
+                    || this.state.application.name != newAppDetails.name || this.state.application.timeRangeClause != newAppDetails.timeRangeClause)
+                )) {
+      //console.log("FetchBrowserApplicationDetails.componentWillReceiveProps Update >> " + JSON.stringify(newAppDetails));
+      this.setState({ application: newAppDetails });
       this.shouldRender = 0;
     }
 
   }
-
-
 
   shouldComponentUpdate() {
     return (this.shouldRender == 0);
@@ -43,6 +43,7 @@ export default class FetchBrowserApplicationDetails extends React.Component {
 
     let queryBrwsrInteractionDataAvailableFromUpdated = this.queryBrwsrInteractionDataAvailableFrom.replace('$BR_APP_NAME$', this.state.application.name);
     let queryBrwsrInteractionUniqueCountsUpdated = this.queryBrwsrInteractionUniqueCounts.replace('$BR_APP_NAME$', this.state.application.name);
+    queryBrwsrInteractionUniqueCountsUpdated = queryBrwsrInteractionUniqueCountsUpdated.replace('$TIME_RANGE$',this.state.application.timeRangeClause);
 
     //console.log("render query >> " + queryBrwsrInteractionDataAvailableFromUpdated);
     //console.log("render query >> " + queryBrwsrInteractionUniqueCountsUpdated);

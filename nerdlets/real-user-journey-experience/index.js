@@ -14,7 +14,7 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
     nerdlet.setConfig({
       accountPicker: true,
       //marking time picker as false. All queries are hardcoded to since 10 days ago.
-      timePicker: false,
+      timePicker: true,
       timePickerRanges: [
         { label: "30 minutes", offset: 1800000 }, 
         { label: "60 minutes", offset: 3600000 }, 
@@ -23,8 +23,9 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
         { label: "12 hours", offset: 43200000 }, 
         { label: "24 hours", offset: 86400000 }, 
         { label: "3 days", offset: 259200000 }, 
-        { label: "7 days", offset: 604800000 }
-        ]
+        { label: "7 days", offset: 604800000 }, 
+        { label: "10 days", offset: 864000000 }
+      ]
     });
 
     this.appCSSStyle = {

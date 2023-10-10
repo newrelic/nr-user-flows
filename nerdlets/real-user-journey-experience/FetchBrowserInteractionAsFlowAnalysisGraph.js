@@ -18,7 +18,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.constructor >> " + JSON.stringify(browserInteraction));
 
     //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    //this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' $TIME_RANGE$";
 
     this.initializeBrowserInteractionAppDetails(browserInteraction);
 
@@ -42,6 +43,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       browserInteraction: browserInteraction,
       browserInteractionDetail: null,
       displayE2EFlows: false,
+      timeRangeClause: browserInteraction.timeRangeClause
     };
 
     this.queryCounter = 0;
@@ -81,7 +83,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   componentWillReceiveProps(newBrowserInteraction) {
 
     if ((this.state.accountId != null && this.state.accountId != newBrowserInteraction.applicationDetails.accountId)
-      || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)) {
+        || (this.state.appName != null && this.state.appName != newBrowserInteraction.applicationDetails.name)
+        || (this.state.timeRangeClause != null && this.state.timeRangeClause != newBrowserInteraction.timeRangeClause)) {
 
       //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
       //console.log(newBrowserInteraction);
@@ -272,6 +275,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //console.log("browserInteractionName >>>> " + JSON.stringify(browserInteractionName));
 
     let interactionsQuery = this.INTERACTIONS_QUERY.replace('$BR_APP_NAME$', this.state.appName);
+    interactionsQuery = interactionsQuery.replace('$TIME_RANGE$',this.state.timeRangeClause);
     interactionsQuery = interactionsQuery.replace('$PREVIOUS_URL$', interactionName);
     //console.log("appendChild Query >>>> " + interactionsQuery);
 

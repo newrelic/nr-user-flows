@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  nerdlet,
   PlatformStateContext,
   EntitiesByNameQuery, NrqlQuery,
   Dropdown, DropdownItem,
@@ -16,7 +15,9 @@ export default class FetchBrowserApplications extends React.Component {
 
     PlatformStateContext.subscribe((platformState) => {
       //console.log("platformState.accountId >> " + platformState.accountId);
+      //console.log("platformState >> " + JSON.stringify(platformState));
       this.setState({ accountId: platformState.accountId});
+      this.setState({ timeRange: platformState.timeRange.duration});
     });
 
     this.state = {
@@ -26,7 +27,8 @@ export default class FetchBrowserApplications extends React.Component {
       selectedApp:null,
     };
 
-    this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
+    //this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
+    this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl $TIME_RANGE$ LIMIT 5";
 
   }
 
@@ -69,8 +71,12 @@ export default class FetchBrowserApplications extends React.Component {
     };
 
     if (selectedAppDetails) {
-        const topInteractionsQueryWithAppName = this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',selectedAppDetails.name);
+        let topInteractionsQueryWithAppName = this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',selectedAppDetails.name);
+        let timeRangeClause = 'SINCE ' + (this.state.timeRange)/60000 + ' minutes ago';
+        topInteractionsQueryWithAppName = topInteractionsQueryWithAppName.replace('$TIME_RANGE$',timeRangeClause);
         //console.log('topInteractionsQueryWithAppName >> ' + topInteractionsQueryWithAppName);
+        selectedAppDetails.timeRangeClause = timeRangeClause;
+
         return (
           <Grid style={mainGridCSSStyle} gapType={Grid.GAP_TYPE.MEDIUM} spacingType={[Grid.SPACING_TYPE.SMALL]} fullWidth fullHeight>
             <GridItem columnSpan={12}>
@@ -120,6 +126,7 @@ export default class FetchBrowserApplications extends React.Component {
                     browserInteractionDetail.avgDuration = facetInfo.results[1].average;
 
                     browserInteractionDetail.applicationDetails = this.state.selectedApp;
+                    browserInteractionDetail.timeRangeClause = timeRangeClause;
 
                     browserInteractions.push(browserInteractionDetail);
                   });
