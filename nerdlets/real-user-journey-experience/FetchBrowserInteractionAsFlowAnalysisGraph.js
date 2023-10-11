@@ -26,12 +26,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
   initializeBrowserInteractionAppDetails(browserInteraction) {
 
-
     const initPlotData = {
       nodes: [],
       edges: []
     }
-
 
     this.state = {
       plotData: initPlotData,
@@ -40,7 +38,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       accountId: browserInteraction.applicationDetails.accountId,
       appName: browserInteraction.applicationDetails.name,
       browserInteraction: browserInteraction,
-      browserInteractionDetail: null,
       displayE2EFlows: false,
       timeRangeClause: browserInteraction.timeRangeClause
     };
@@ -88,8 +85,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       //console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
       //console.log(newBrowserInteraction);
 
-      this.plotGraph = false;
-      this.setState({ render: true });
+      //this.plotGraph = false;
+      //this.setState({ render: true });
 
       this.initializeBrowserInteractionAppDetails(newBrowserInteraction);
     }
@@ -110,18 +107,18 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
       // Add First source as Node.
       const srcInteraction = this.interactions[0];
-      var nodeDetails = {};
+      let nodeDetails = {};
       nodeDetails.value = {};
       nodeDetails.id = srcInteraction.source;
       nodeDetails.value.title = srcInteraction.source;
       nodeDetails.interactionName = srcInteraction.srcInteractionName;
 
       nodeDetails.value.items = [];
-      var visitorCountItem = {};
+      let visitorCountItem = {};
       visitorCountItem.text = 'Visitors #';
       visitorCountItem.value = srcInteraction.value;
       nodeDetails.value.items.push(visitorCountItem);
-      var avgDurationItem = {};
+      let avgDurationItem = {};
       avgDurationItem.text = 'page load time';
       avgDurationItem.value = srcInteraction.avgDuration.toFixed(3) + ' (s)';
       nodeDetails.value.items.push(avgDurationItem);
@@ -135,7 +132,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         this.interactions.forEach((thisInteraction) => {
 
           if (!uniqueNodes.find((node) => (node.id === thisInteraction.target))) {
-            var nodeDetails = {};
+            let nodeDetails = {};
             nodeDetails.value = {};
             nodeDetails.id = thisInteraction.target;
             nodeDetails.value.title = thisInteraction.target;
@@ -146,19 +143,19 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             //console.log("Interactions for " + thisInteraction.target + " : " + interactionsWithThisTarget.length);
 
             if (interactionsWithThisTarget.length == 1) {
-              var avgDurationItem = {};
+              let avgDurationItem = {};
               avgDurationItem.text = 'page load time';
               avgDurationItem.value = thisInteraction.avgDuration.toFixed(3) + ' (s)';
               nodeDetails.value.items.push(avgDurationItem);
             } else {
               // Empty Label Item
-              var avgDurationItem = {};
+              let avgDurationItem = {};
               avgDurationItem.text = 'page load time from';
               avgDurationItem.value = '';
               nodeDetails.value.items.push(avgDurationItem);
 
               interactionsWithThisTarget.forEach((interaction) => {
-                var avgDurationItem = {};
+                let avgDurationItem = {};
                 if (srcInteraction.source === interaction.source) {
                   avgDurationItem.text = 'Source';
                 } else {
@@ -175,11 +172,11 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
         //prepare all paths and e2e durations
         this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
-        var facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
+        let facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
         this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses, 1);
         //console.log("All Paths >> ");
         //console.log(this.allInteractionsPaths);
-        var allPathTotalDuration = 0;
+        let allPathTotalDuration = 0;
         this.allInteractionsPaths.forEach((path) => {
           allPathTotalDuration = allPathTotalDuration + path.duration;
         });
@@ -222,7 +219,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     let interactionsWithThisSource = this.interactions.filter((interaction) => interaction.source === src);
     //console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
     if (interactionsWithThisSource.length == 0) {
-      var pathNode = {};
+      let pathNode = {};
       pathNode.path = srcPath;
       pathNode.duration = duration;
       pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
@@ -302,7 +299,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           }
         }
 
-        var childBrowserInteractionDetail = {};
+        let childBrowserInteractionDetail = {};
         childBrowserInteractionDetail.source = srcDisplayName;
         childBrowserInteractionDetail.srcInteractionName = interactionName;
         childBrowserInteractionDetail.target = childDisplayName;
@@ -326,7 +323,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
   }
 
-  renderInteractionDetails(browserInteractionDetail) {
+  renderInteractionDetails(nodeBrowserInteractionDetail) {
 
     const nerdlet = {
       id: 'page-views.drilldown',
@@ -334,7 +331,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         //"chartFilters": "",
         //"drilldownTab": "AJAX requests",
         "entityGuid": this.state.entityGuid,
-        "groupBy": browserInteractionDetail.browserInteractionName,
+        "groupBy": nodeBrowserInteractionDetail.browserInteractionName,
         "groupByAttribute": "browserInteractionName",
         //"searchAjax": "",
         "viewType": "SPA"
@@ -449,12 +446,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           //console.log(item._cfg.model.id + ' ~ ' + item._cfg.model.interactionName);
           //console.log(this.state.accountId + ' ~ ' + this.state.appName);
 
-          var browserInteractionDetail = {};
-          browserInteractionDetail.accountId = this.state.accountId;
-          browserInteractionDetail.appName = this.state.appName;
-          browserInteractionDetail.browserInteractionName = item._cfg.model.interactionName;
+          let nodeBrowserInteractionDetail = {};
+          nodeBrowserInteractionDetail.accountId = this.state.accountId;
+          nodeBrowserInteractionDetail.appName = this.state.appName;
+          nodeBrowserInteractionDetail.browserInteractionName = item._cfg.model.interactionName;
 
-          this.renderInteractionDetails(browserInteractionDetail);
+          this.renderInteractionDetails(nodeBrowserInteractionDetail);
         });
         graph.on('canvas:contextmenu', (evt) => {
           //console.log('canvas:contextmenu');
@@ -463,7 +460,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         graph.on('node:contextmenu', (evt) => {
           //console.log('node:contextmenu');
           evt.preventDefault();
-          var elements = document.getElementsByClassName('g6-component-contextmenu');
+          let elements = document.getElementsByClassName('g6-component-contextmenu');
           if (elements.length > 0) {
             for (let i=0; i < elements.length; i++) {
               elements[i].style.display = 'none';
@@ -477,7 +474,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       },
     };
 
-    const browserInteractionDetail = this.state.browserInteractionDetail;
     const allPaths = {
       interactionPaths: this.allInteractionsPaths
     };

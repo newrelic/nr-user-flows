@@ -57,8 +57,11 @@ export default class FetchBrowserApplicationDetails extends React.Component {
             }
             if (!loading && data) {
               this.shouldRender = 1;
-
-              const displayDate = new Date(data.results[0].earliest).toString();
+              //console.log(data.results[0].earliest);
+              let displayDate = '--';
+              if (data.results[0].earliest) {
+                  displayDate = new Date(data.results[0].earliest).toString();
+              }
 
               return (
                 <StackItem fullWidth fullHeight >

@@ -20,6 +20,17 @@ export default class FetchBrowserApplications extends React.Component {
       this.setState({ timeRange: platformState.timeRange.duration});
     });
 
+    this.shouldRender = 0;
+    /*
+    For some unknown reason (may be async nature), NrqlQuery triggers the execution of code inside (!loading && data) if condition 
+    - once when the query execution is initiated
+    - and again when the query returns results.
+    This counter is initiated when ever there is a change to the query and the first execution is ignored.
+    Only after the second execution the browser interaction graphs are plotted.
+    Hope this explanation makes sense to the person reading, if not uncomment the console logs and check for yourself on your local machine
+    */
+    this.asyncCount = 0;
+
     this.state = {
       search: '',
       apps: [],
@@ -29,6 +40,31 @@ export default class FetchBrowserApplications extends React.Component {
 
     //this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
     this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl $TIME_RANGE$ LIMIT 5";
+
+  }
+
+  shouldComponentUpdate() {
+    return (this.shouldRender == 0);
+  }
+
+  componentWillReceiveProps() {
+
+    PlatformStateContext.subscribe((platformState) => {
+        //console.log("platformState.accountId >> " + platformState.accountId);
+        //console.log("platformState >> " + JSON.stringify(platformState));
+        if (this.state.accountId != null && this.state.accountId != platformState.accountId) {
+            this.setState({ accountId: platformState.accountId});
+            this.shouldRender = 0;
+            this.asyncCount = 2;
+        }
+
+        if (this.state.timeRange != null && this.state.timeRange != platformState.timeRange.duration) {
+            //console.log("duration change >> ");
+            this.setState({ timeRange: platformState.timeRange.duration});
+            this.shouldRender = 0;
+            this.asyncCount = 2;
+        }
+    });
 
   }
 
@@ -54,9 +90,16 @@ export default class FetchBrowserApplications extends React.Component {
 
   manageSelectedBrowserApplication(clickedItem, clickEvt) {
     //console.log('FetchBrowserApplications.manageSelectedBrowserApplication >> ' + JSON.stringify(clickedItem));
+    this.shouldRender = 0;
+    if (this.state.selectedApp) {
+      this.asyncCount = 2;
+    } else {
+      this.asyncCount = 1;
+    }
     this.setState({ selectedAppName: clickEvt.target.textContent });
     this.setState({ selectedApp: clickedItem });
     this.setState({ accountId: clickedItem.accountId });
+
   }
 
   render() {
@@ -107,16 +150,18 @@ export default class FetchBrowserApplications extends React.Component {
             </GridItem>
             <NrqlQuery accountIds={[this.state.accountId]} query={topInteractionsQueryWithAppName} formatType={NrqlQuery.FORMAT_TYPE.RAW} >
               {({ loading, data }) => {
+                //console.log(loading + ' : ' + JSON.stringify(data));
                 if (loading) {
                   return <Spinner inline />
                 }
-                if (!loading && data) {
-
+                this.asyncCount = this.asyncCount - 1;
+                //console.log(this.asyncCount + ' : ' + JSON.stringify(data.facets));
+                if (!loading && data && this.asyncCount == 0) {
                   //console.log("FetchBrowserApplications.render - data >> " + JSON.stringify(data));
-                  const browserInteractions = [];
-                  data.facets.forEach((facetInfo, indx) => {
+                  //let browserInteractions = [];
+                  let browserInteractions = data.facets.map((facetInfo, indx) => {
 
-                    var browserInteractionDetail = {};
+                    let browserInteractionDetail = {};
                     browserInteractionDetail.id = 'A'+indx;
                     browserInteractionDetail.browserInteractionName = facetInfo.name[0];
                     browserInteractionDetail.urlDomain = facetInfo.name[1];
@@ -128,10 +173,14 @@ export default class FetchBrowserApplications extends React.Component {
                     browserInteractionDetail.applicationDetails = this.state.selectedApp;
                     browserInteractionDetail.timeRangeClause = timeRangeClause;
 
-                    browserInteractions.push(browserInteractionDetail);
+                    //console.log("src : " + JSON.stringify(browserInteractionDetail));
+                    return browserInteractionDetail;
                   });
+                  this.shouldRender = 1;
 
                   //console.log("Number of initial page loads >> " + browserInteractions.length);
+                  //console.log(browserInteractions);
+
                   const journeyGridItemCSSStyle = {
                       outlineWidth: 'thin',
                       borderRadius: '25px',
@@ -149,10 +198,10 @@ export default class FetchBrowserApplications extends React.Component {
                         ))
                       }
                     </React.Fragment>
-                  )
+                  );
 
                 } else {
-                  return ''
+                  return <span></span>
                 }
               }}
             </NrqlQuery>

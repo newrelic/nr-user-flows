@@ -1,9 +1,7 @@
 import React from 'react';
 import Modal from 'react-modal';
-import CopyToClipboard from 'react-copy-to-clipboard';
 import {
-  NrqlQuery,
-  Spinner, HeadingText, Button, Toast, navigation,
+  HeadingText, Button, navigation,
   Table, TableHeader, TableHeaderCell, TableRow, TableRowCell, MetricTableRowCell
 } from 'nr1';
 
@@ -89,13 +87,6 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
 
   _onHideEnd() {
     this.setState({ mounted: false });
-  }
-
-  displayToastMessage() {
-    Toast.showToast({
-      title: 'Query Copied Successful',
-      type: Toast.TYPE.NORMAL,
-    });
   }
 
   render() {
