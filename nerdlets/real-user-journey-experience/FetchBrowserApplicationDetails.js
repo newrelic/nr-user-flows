@@ -29,6 +29,7 @@ export default class FetchBrowserApplicationDetails extends React.Component {
                 )) {
       //console.log("FetchBrowserApplicationDetails.componentWillReceiveProps Update >> " + JSON.stringify(newAppDetails));
       this.setState({ application: newAppDetails });
+      console.warn(`Updating`);
       this.shouldRender = 0;
     }
 

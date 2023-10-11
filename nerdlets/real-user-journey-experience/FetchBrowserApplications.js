@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   PlatformStateContext,
-  EntitiesByNameQuery, NrqlQuery, useNrqlQuery,
+  EntitiesByNameQuery, NrqlQuery,
   Dropdown, DropdownItem,
   Stack, StackItem, Grid, GridItem,
   Tile, HeadingText, BlockText, Spinner
@@ -11,6 +11,7 @@ import FetchBrowserInteractionAsFlowAnalysisGraph from './FetchBrowserInteractio
 
 export default class FetchBrowserApplications extends React.Component {
   constructor() {
+   
     super(...arguments);
 
     PlatformStateContext.subscribe((platformState) => {
@@ -29,7 +30,12 @@ export default class FetchBrowserApplications extends React.Component {
 
     //this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl SINCE 1 week ago LIMIT 5";
     this.TOP_INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category = 'Initial page load' AND previousUrl = targetUrl $TIME_RANGE$ LIMIT 5";
+    this.shouldRender = 0;
 
+    this.prevKeyHolder = '';
+  }
+  shouldComponentUpdate() {
+    return (this.shouldRender == 0);
   }
 
   getEntitiesByName(searchName) {
@@ -52,48 +58,21 @@ export default class FetchBrowserApplications extends React.Component {
 
   }
 
+
   manageSelectedBrowserApplication(clickedItem, clickEvt) {
+    console.warn(`Updating: ${clickEvt.target.textContent}`);
+    this.shouldRender = 0;
     //console.log('FetchBrowserApplications.manageSelectedBrowserApplication >> ' + JSON.stringify(clickedItem));
     this.setState({ selectedAppName: clickEvt.target.textContent });
     this.setState({ selectedApp: clickedItem });
     this.setState({ accountId: clickedItem.accountId });
-
-    let topInteractionsQueryWithAppName = !!this.state.selectedApp ? this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',this.state.selectedApp.name) : '';
-
-    let browserInteractions2;
-
-    NrqlQuery.query({
-      accountIds: [this.state.accountId],
-      query: topInteractionsQueryWithAppName,
-      formatType: NrqlQuery.FORMAT_TYPE.RAW
-    }).then((data) => {
-      browserInteractions2 = data.facets.map((facetInfo, indx) => {
-
-        var browserInteractionDetail = {};
-        browserInteractionDetail.id = 'A'+indx;
-        browserInteractionDetail.browserInteractionName = facetInfo.name[0];
-        browserInteractionDetail.urlDomain = facetInfo.name[1];
-        browserInteractionDetail.category = facetInfo.name[2];
-        browserInteractionDetail.trigger = facetInfo.name[3];
-        browserInteractionDetail.uniqueSessionCount = facetInfo.results[0].uniqueCount;
-        browserInteractionDetail.avgDuration = facetInfo.results[1].average;
-
-        browserInteractionDetail.applicationDetails = this.state.selectedApp;
-
-        return browserInteractionDetail;
-      });
-
-      console.log(`new block ${browserInteractions2}`);
-
-    })
-
   }
 
   render() {
     const { search, apps } = this.state;
     this.getEntitiesByName(search);
 
-    var selectedAppDetails = this.state.selectedApp;
+    let selectedAppDetails = this.state.selectedApp;
     //console.log(selectedAppDetails);
 
     const mainGridCSSStyle = {
@@ -104,7 +83,7 @@ export default class FetchBrowserApplications extends React.Component {
         let topInteractionsQueryWithAppName = this.TOP_INTERACTIONS_QUERY.replace('$BR_APP_NAME$',selectedAppDetails.name);
         let timeRangeClause = 'SINCE ' + (this.state.timeRange)/60000 + ' minutes ago';
         topInteractionsQueryWithAppName = topInteractionsQueryWithAppName.replace('$TIME_RANGE$',timeRangeClause);
-        //console.log('topInteractionsQueryWithAppName >> ' + topInteractionsQueryWithAppName);
+        // console.log('topInteractionsQueryWithAppName >> ' + topInteractionsQueryWithAppName);
         selectedAppDetails.timeRangeClause = timeRangeClause;
 
         return (
@@ -138,16 +117,14 @@ export default class FetchBrowserApplications extends React.Component {
             <NrqlQuery accountIds={[this.state.accountId]} query={topInteractionsQueryWithAppName} formatType={NrqlQuery.FORMAT_TYPE.RAW} >
               {({ loading, data }) => {
                 if (loading) {
-                  console.log('it is loading', loading)
                   return <Spinner inline />
                 }
-                if (!loading && data) {
+                if (!loading && data && this.prevKeyHolder !== data.facets[0].name[0]) {
+                  this.prevKeyHolder = data.facets[0].name[0];
+                  console.log("FetchBrowserApplications.render - data >> " + JSON.stringify(data.facets[0].name));
+                  const browserInteractions = data.facets.map((facetInfo, indx) => {
 
-                  //console.log("FetchBrowserApplications.render - data >> " + JSON.stringify(data));
-                  console.log('is loading', loading)
-                  const browserInteractions =    data.facets.map((facetInfo, indx) => {
-
-                    var browserInteractionDetail = {};
+                    let browserInteractionDetail = new Object();
                     browserInteractionDetail.id = 'A'+indx;
                     browserInteractionDetail.browserInteractionName = facetInfo.name[0];
                     browserInteractionDetail.urlDomain = facetInfo.name[1];
@@ -159,24 +136,11 @@ export default class FetchBrowserApplications extends React.Component {
                     browserInteractionDetail.applicationDetails = this.state.selectedApp;
                     browserInteractionDetail.timeRangeClause = timeRangeClause;
 
+                    // browserInteractions.push(browserInteractionDetail);
                     return browserInteractionDetail;
+                    browserInteractionDetail = null;
                   });
-
-                  // data.facets.forEach((facetInfo, indx) => {
-
-                  //   var browserInteractionDetail = {};
-                  //   browserInteractionDetail.id = 'A'+indx;
-                  //   browserInteractionDetail.browserInteractionName = facetInfo.name[0];
-                  //   browserInteractionDetail.urlDomain = facetInfo.name[1];
-                  //   browserInteractionDetail.category = facetInfo.name[2];
-                  //   browserInteractionDetail.trigger = facetInfo.name[3];
-                  //   browserInteractionDetail.uniqueSessionCount = facetInfo.results[0].uniqueCount;
-                  //   browserInteractionDetail.avgDuration = facetInfo.results[1].average;
-
-                  //   browserInteractionDetail.applicationDetails = this.state.selectedApp;
-
-                  //   browserInteractions.push(browserInteractionDetail);
-                  // });
+                  this.shouldRender = 1;
 
                   //console.log("Number of initial page loads >> " + browserInteractions.length);
                   const journeyGridItemCSSStyle = {
