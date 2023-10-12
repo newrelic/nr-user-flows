@@ -188,17 +188,26 @@ export default class FetchBrowserApplications extends React.Component {
                       padding: '10px',
                   };
 
-
-                  return (
-                    <React.Fragment>
-                      {browserInteractions.map(browserInteraction => (
-                          <GridItem columnSpan={12} style={journeyGridItemCSSStyle}>
-                            <FetchBrowserInteractionAsFlowAnalysisGraph {...browserInteraction} />
-                          </GridItem>
-                        ))
-                      }
-                    </React.Fragment>
-                  );
+                  if (browserInteractions.length == 0) {
+                      return (
+                        <GridItem columnSpan={12}>
+                            <BlockText type={BlockText.TYPE.PARAGRAPH} tagType={BlockText.TYPE.DIV} spacingType={[BlockText.SPACING_TYPE.LARGE]} >
+                              There are no user journeys to display
+                            </BlockText>
+                        </GridItem>
+                      );
+                  } else {
+                      return (
+                        <React.Fragment>
+                          {browserInteractions.map(browserInteraction => (
+                              <GridItem columnSpan={12} style={journeyGridItemCSSStyle}>
+                                <FetchBrowserInteractionAsFlowAnalysisGraph {...browserInteraction} />
+                              </GridItem>
+                            ))
+                          }
+                        </React.Fragment>
+                      );
+                  }
 
                 } else {
                   return <span></span>

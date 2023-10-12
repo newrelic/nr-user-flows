@@ -44,6 +44,8 @@ export default class RealUserJourneyExperienceNerdlet extends React.Component {
     return (
       <div style={this.appCSSStyle}>
         <h4>Select an <b>Account</b> and a <b>browser application</b> to view the real user journey flow</h4>
+        <br />
+        <div>This application displays user journeys from top 5 landing pages. The journeys are derived from browser real user monitoring data.</div>
         <PlatformStateContext.Consumer>
           {(platformState) => {
             if (platformState.accountId == 'cross-account') {
