@@ -170,6 +170,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           }
         });
 
+        //console.log("Final this.interactions >> ");
+        //console.log(this.interactions);
+        //console.log("uniqueNodes >> ");
+        //console.log(uniqueNodes);
         //prepare all paths and e2e durations
         this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
         let facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
@@ -247,6 +251,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
    * Validates an edge with already captured date to avoid duplicates, cycle dependencies.
    */
   isValidEdge(interactionsArr, thisSrcInteractionName, thisDestInteractionName) {
+
+    //Check if the edge is recursive
+    if (thisSrcInteractionName === thisDestInteractionName) {
+      //console.log("Is a recursive edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
+      return false;
+    }
 
     //Check if the edge is duplicate
     if (interactionsArr.find((edge) => (edge.srcInteractionName === thisSrcInteractionName && edge.targetInteractionName === thisDestInteractionName))) {
