@@ -32,11 +32,11 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
 
     this.modalCSSStyle = {
       content: {
-        width: '80%',
-        top: '25%',
-        left: '15%',
+        width: '90%',
+        top: '03%',
+        left: '02%',
         right: 'auto',
-        bottom: 'auto',
+        bottom: '03%',
         padding: '0px',
         border: '1px solid #000',
         //marginRight: '-50%',

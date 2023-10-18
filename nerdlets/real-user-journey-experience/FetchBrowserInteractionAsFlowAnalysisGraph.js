@@ -46,7 +46,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     this.plotGraph = false;
     /** Number of pixels that separate nodes horizontally in the layout. */
     this.rankSepPixel = 25;
-    this.nodeSize = null;
+    this.plotHeight = 400;
+    //this.nodeSize = null;
+
+    this.landingInteractionName = browserInteraction.browserInteractionName;
 
     this.interactions = [
       {
@@ -189,15 +192,22 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       }
 
       //Update rank sep pixels
-      if (uniqueNodes.length == 2) {
+      let nodeLen = uniqueNodes.length;
+      if (nodeLen == 2) {
         this.rankSepPixel = 110;
-      } else if (uniqueNodes.length == 3) {
+      } else if (nodeLen == 3) {
         this.rankSepPixel = 90;
-      } else if (uniqueNodes.length == 4) {
+      } else if (nodeLen == 4) {
         this.rankSepPixel = 50;
       } else {
         this.rankSepPixel = 20;
       }
+
+      if (nodeLen > 10) {
+          this.plotHeight = this.plotHeight + ((nodeLen/10)*250);
+          //console.log('plotHeight : ' + this.plotHeight);
+      }
+
 
       const updatedPlotData = {
         nodes: uniqueNodes,
@@ -251,10 +261,16 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
    * Validates an edge with already captured date to avoid duplicates, cycle dependencies.
    */
   isValidEdge(interactionsArr, thisSrcInteractionName, thisDestInteractionName) {
-
+    //console.log("Input >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
     //Check if the edge is recursive
     if (thisSrcInteractionName === thisDestInteractionName) {
       //console.log("Is a recursive edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
+      return false;
+    }
+
+    //Check if destination is back to original landing page. This will lead to startover / infinite loop and the rendering makes it infinite
+    if (this.landingInteractionName === thisDestInteractionName) {
+      //console.log(" Is edge pointing back to landingPage >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
@@ -268,6 +284,13 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //a -> b, b -> a
     if (interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName && edge.targetInteractionName === thisSrcInteractionName))) {
       //console.log("Is a cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
+      return false;
+    }
+
+    //Check if an edge is cyclic. This will lead to infinite loop and the rendering makes it infinite
+    //a -> b, b -> c, c -> d, d -> a
+    if (interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName))) {
+      //console.log("For " + this.landingInteractionName + " : Is an associative cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
@@ -357,7 +380,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     //this.setState({ selectedAppName: clickEvt.target.textContent });
     //this.setState({ selectedApp: clickedItem });
     //this.setState({ accountId: clickedItem.accountId });
-    //clickEvt.preventDefault();
+    clickEvt.preventDefault();
     this.setState({ displayE2EFlows: true });
     this.setState({ render: true });
 
@@ -375,7 +398,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     const config = {
       data: this.state.plotData,
-      height: 400,
+      height: this.plotHeight,
       //width: 400,
       nodeCfg: {
         //size: [120, 40],
