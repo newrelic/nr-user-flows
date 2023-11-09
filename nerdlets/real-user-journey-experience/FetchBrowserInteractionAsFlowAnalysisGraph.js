@@ -159,11 +159,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
               interactionsWithThisTarget.forEach((interaction) => {
                 let avgDurationItem = {};
-                if (srcInteraction.source === interaction.source) {
-                  avgDurationItem.text = 'Source';
-                } else {
-                  avgDurationItem.text = interaction.source;
-                }
+                avgDurationItem.text = interaction.source;
                 avgDurationItem.value = interaction.avgDuration.toFixed(3) + ' (s)';
                 nodeDetails.value.items.push(avgDurationItem);
               });
@@ -180,7 +176,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         //prepare all paths and e2e durations
         this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
         let facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
-        this.appendChildPath(srcInteraction.source, srcInteraction.source, srcInteraction.avgDuration, facetWhereClauses, 1);
+        this.appendChildPath(srcInteraction.source, srcInteraction.source, '~'+srcInteraction.source+'~', srcInteraction.avgDuration, facetWhereClauses, 1);
         //console.log("All Paths >> ");
         //console.log(this.allInteractionsPaths);
         let allPathTotalDuration = 0;
@@ -229,32 +225,44 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     }
   }
 
-  appendChildPath(srcPath, src, duration, facetWhereClauses, stepNumber) {
+  appendChildPath(srcPath, src, decoratedSrcPath, duration, facetWhereClauses, stepNumber) {
     let interactionsWithThisSource = this.interactions.filter((interaction) => interaction.source === src);
     //console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
     if (interactionsWithThisSource.length == 0) {
-      let pathNode = {};
-      pathNode.path = srcPath;
-      pathNode.duration = duration;
-      pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
-      //console.log(pathNode.nrql);
-      this.allInteractionsPaths.push(pathNode);
+      this.addInteractionPath(srcPath, duration, facetWhereClauses);
     } else {
 
       const nxtStepNumber = stepNumber + 1;
 
       interactionsWithThisSource.forEach((interaction) => {
-        let totalPath = srcPath + ' -> ' + interaction.target;
-        let totalDuration = duration + interaction.avgDuration;
-        let stepDisplay = "Step" + stepNumber + ": " + interaction.source + " -> " + interaction.target;
-        //console.log("stepDisplay : " + stepDisplay);
-        let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '" + interaction.srcInteractionName + "' AND targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + stepDisplay + "'";
-        this.appendChildPath(totalPath, interaction.target, totalDuration, updWhereClauses, nxtStepNumber);
+        // Avoid associative cyclomatic complexity
+        // a -> b -> c -> d -> e -> c
+        if (decoratedSrcPath.includes('~' + interaction.target + '~')) {
+          //console.log(srcPath + ' includes ' + interaction.target);
+          this.addInteractionPath(srcPath, duration, facetWhereClauses);
+        } else {          
+          let totalPath = srcPath + ' -> ' + interaction.target;
+          let totalDecoratedPath = decoratedSrcPath + ' -> ~' + interaction.target+'~';
+          let totalDuration = duration + interaction.avgDuration;
+          let stepDisplay = "Step" + stepNumber + ": " + interaction.source + " -> " + interaction.target;
+          //console.log("stepDisplay : " + stepDisplay);
+          let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '" + interaction.srcInteractionName + "' AND targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + stepDisplay + "'";
+          this.appendChildPath(totalPath, interaction.target, totalDecoratedPath, totalDuration, updWhereClauses, nxtStepNumber);
+        }
 
       });
 
     }
 
+  }
+
+  addInteractionPath(srcPath, duration, facetWhereClauses) {
+    let pathNode = {};
+    pathNode.path = srcPath;
+    pathNode.duration = duration;
+    pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
+    //console.log(pathNode.nrql);
+    this.allInteractionsPaths.push(pathNode);
   }
 
   /**
@@ -288,10 +296,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     }
 
     //Check if an edge is cyclic. This will lead to infinite loop and the rendering makes it infinite
-    //a -> b, b -> c, c -> d, d -> a
+    //a -> b, b -> c, c -> d, d -> e -> c
     if (interactionsArr.find((edge) => (edge.srcInteractionName === thisDestInteractionName))) {
       //console.log("For " + this.landingInteractionName + " : Is an associative cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
-      return false;
+      return true;
     }
 
     return true;
@@ -376,10 +384,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
   }
 
   showAllPaths(clickEvt) {
-    //console.log('FetchBrowserApplications.showAllPaths >> ');
-    //this.setState({ selectedAppName: clickEvt.target.textContent });
-    //this.setState({ selectedApp: clickedItem });
-    //this.setState({ accountId: clickedItem.accountId });
+    //console.log('FetchBrowserInteractionAsFlowAnalysisGraph.showAllPaths >> ');
     clickEvt.preventDefault();
     this.setState({ displayE2EFlows: true });
     this.setState({ render: true });
@@ -507,27 +512,42 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       },
     };
 
-    const allPaths = {
-      interactionPaths: this.allInteractionsPaths
-    };
-
-    const avgDurationStyle = {
-      textAlign: 'right',
-      marginRight: '75px',
-      fontSize: '14px',
-    }
-
     if (this.plotGraph) {
       return (
         <React.Fragment>
-          <div style={avgDurationStyle}>Average end to end duration is <b>{this.allPathsAvgDuration.toFixed(3) + ' (s)'}</b>&nbsp;&nbsp;<Link onClick={(evt) => this.showAllPaths(evt)}>Click here</Link> for individual journey details.</div>
-          {this.state.displayE2EFlows && <FetchBrowserInteractionFlowDetails {...allPaths} accountId={this.state.accountId} />}
+          {this.renderInteractionPaths()}
           <FlowAnalysisGraph {...config} />
         </React.Fragment>
       );
     } else {
       return <Spinner type={Spinner.TYPE.DOT} spacingType={[Spinner.SPACING_TYPE.EXTRA_LARGE]} />
     }
+  }
+
+  renderInteractionPaths() {
+    //console.log('FetchBrowserInteractionAsFlowAnalysisGraph.renderInteractionPaths >> ');
+
+    if (this.state.plotData.nodes.length > 1) {
+      const allPaths = {
+        interactionPaths: this.allInteractionsPaths
+      };
+
+      const avgDurationStyle = {
+        textAlign: 'right',
+        marginRight: '75px',
+        fontSize: '14px',
+      }
+      return (
+        <React.Fragment>
+          <div style={avgDurationStyle}>Average end to end duration is <b>{this.allPathsAvgDuration.toFixed(3) + ' (s)'}</b>.
+          &nbsp;&nbsp;<Link onClick={(evt) => this.showAllPaths(evt)}>Click here</Link> for individual journey details.</div>
+          {this.state.displayE2EFlows && <FetchBrowserInteractionFlowDetails {...allPaths} accountId={this.state.accountId} />}
+        </React.Fragment>
+      )
+    } else {
+      return ( <div></div> )
+    }
+
   }
 
 }
