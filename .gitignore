@@ -6,3 +6,4 @@ old*
 .serverless*
 backend/.serverless*
 nerdlets-beta/*
+*copy*
