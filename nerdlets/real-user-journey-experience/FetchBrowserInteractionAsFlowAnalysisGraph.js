@@ -159,7 +159,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
               interactionsWithThisTarget.forEach((interaction) => {
                 let avgDurationItem = {};
-                avgDurationItem.text = interaction.source;
+                //avgDurationItem.text = interaction.source;
+                if (srcInteraction.source === interaction.source) {
+                  avgDurationItem.text = 'Landing page';
+                } else {
+                  avgDurationItem.text = interaction.source;
+                }
                 avgDurationItem.value = interaction.avgDuration.toFixed(3) + ' (s)';
                 nodeDetails.value.items.push(avgDurationItem);
               });
@@ -176,7 +181,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         //prepare all paths and e2e durations
         this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
         let facetWhereClauses = "WHERE previousGroupedUrl LIKE '" + srcInteraction.srcInteractionName + "' AND targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
-        this.appendChildPath(srcInteraction.source, srcInteraction.source, '~'+srcInteraction.source+'~', srcInteraction.avgDuration, facetWhereClauses, 1);
+        let funnelSteps = "WHERE targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
+        this.appendChildPath(srcInteraction.source, srcInteraction.source, '~'+srcInteraction.source+'~', srcInteraction.avgDuration, facetWhereClauses, 1, funnelSteps);
         //console.log("All Paths >> ");
         //console.log(this.allInteractionsPaths);
         let allPathTotalDuration = 0;
@@ -225,11 +231,11 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     }
   }
 
-  appendChildPath(srcPath, src, decoratedSrcPath, duration, facetWhereClauses, stepNumber) {
+  appendChildPath(srcPath, src, decoratedSrcPath, duration, facetWhereClauses, stepNumber, funnelSteps) {
     let interactionsWithThisSource = this.interactions.filter((interaction) => interaction.source === src);
     //console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
     if (interactionsWithThisSource.length == 0) {
-      this.addInteractionPath(srcPath, duration, facetWhereClauses);
+      this.addInteractionPath(srcPath, duration, facetWhereClauses, funnelSteps);
     } else {
 
       const nxtStepNumber = stepNumber + 1;
@@ -239,7 +245,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         // a -> b -> c -> d -> e -> c
         if (decoratedSrcPath.includes('~' + interaction.target + '~')) {
           //console.log(srcPath + ' includes ' + interaction.target);
-          this.addInteractionPath(srcPath, duration, facetWhereClauses);
+          this.addInteractionPath(srcPath, duration, facetWhereClauses, funnelSteps);
         } else {          
           let totalPath = srcPath + ' -> ' + interaction.target;
           let totalDecoratedPath = decoratedSrcPath + ' -> ~' + interaction.target+'~';
@@ -247,7 +253,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           let stepDisplay = "Step" + stepNumber + ": " + interaction.source + " -> " + interaction.target;
           //console.log("stepDisplay : " + stepDisplay);
           let updWhereClauses = facetWhereClauses + "," + "WHERE previousGroupedUrl LIKE '" + interaction.srcInteractionName + "' AND targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + stepDisplay + "'";
-          this.appendChildPath(totalPath, interaction.target, totalDecoratedPath, totalDuration, updWhereClauses, nxtStepNumber);
+          let updFunnelSteps = funnelSteps + "," + "WHERE targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + "Step" + stepNumber + ": " + interaction.target + "'";
+          this.appendChildPath(totalPath, interaction.target, totalDecoratedPath, totalDuration, updWhereClauses, nxtStepNumber, updFunnelSteps);
         }
 
       });
@@ -256,11 +263,14 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
   }
 
-  addInteractionPath(srcPath, duration, facetWhereClauses) {
+  addInteractionPath(srcPath, duration, facetWhereClauses, funnelSteps) {
     let pathNode = {};
     pathNode.path = srcPath;
     pathNode.duration = duration;
-    pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
+    //pathNode.nrql = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
+    pathNode.e2eDurationNRQL = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
+    pathNode.stepWiseNRQL = "FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ") " + this.state.timeRangeClause + " TIMESERIES AUTO";
+    pathNode.funnelNRQL = "FROM BrowserInteraction SELECT funnel(session, " + funnelSteps + ") where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') " + this.state.timeRangeClause;
     //console.log(pathNode.nrql);
     this.allInteractionsPaths.push(pathNode);
   }

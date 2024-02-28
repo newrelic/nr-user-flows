@@ -104,7 +104,9 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
               <TableHeader style={this.tableHeaderCSSStyle}>
                 <TableHeaderCell value={({ item }) => item.path} width="fit-content">Flow Path</TableHeaderCell>
                 <TableHeaderCell alignmentType={TableHeaderCell.ALIGNMENT_TYPE.RIGHT} width="100px">Total duration</TableHeaderCell>
-                <TableHeaderCell width="150px">NRQL</TableHeaderCell>
+                <TableHeaderCell width="150px">E2E duration Query</TableHeaderCell>
+                <TableHeaderCell width="150px">Stepwise Query</TableHeaderCell>
+                <TableHeaderCell width="150px">Funnel Query</TableHeaderCell>
               </TableHeader>
 
               {({ item }) => (
@@ -112,7 +114,13 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
                   <TableRowCell>{item.path}</TableRowCell>
                   <MetricTableRowCell type={MetricTableRowCell.TYPE.SECONDS} value={item.duration.toFixed(3)} />
                   <TableRowCell>
-                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.nrql, accountId: this.state.accountId })}> Open Query Builder</Button>
+                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.e2eDurationNRQL, accountId: this.state.accountId })}>Open Query Builder</Button>
+                  </TableRowCell>
+                  <TableRowCell>
+                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.stepWiseNRQL, accountId: this.state.accountId })}>Open Query Builder</Button>
+                  </TableRowCell>
+                  <TableRowCell>
+                    <Button type={Button.TYPE.PRIMARY} sizeType={Button.SIZE_TYPE.SMALL} onClick={() => openChartBuilder({ query: item.funnelNRQL, accountId: this.state.accountId })}>Open Query Builder</Button>
                   </TableRowCell>
                 </TableRow>
               )}
