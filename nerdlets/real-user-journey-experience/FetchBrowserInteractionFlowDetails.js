@@ -51,6 +51,16 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
       padding: '10px',
     };
 
+    this.modalCloseCSSStyle = {
+      color: 'indianred',
+      float: 'right',
+      position: 'relative',
+      top: '-41px',
+      right: '10px',
+      fontSize: 'xx-large',
+      cursor: 'pointer',
+    };
+
     this.tableCSSStyle = {
       //padding: '20px',
     };
@@ -99,6 +109,11 @@ export default class FetchBrowserInteractionFlowDetails extends React.Component 
         {this.state.mounted && (
           <Modal isOpen={this.state.open} onRequestClose={this._onClose} onAfterClose={this._onHideEnd} style={this.modalCSSStyle} ariaHideApp={false} >
             <HeadingText type={HeadingText.TYPE.HEADING_3} style={this.modalHeaderCSSStyle}>End to end Journey flows</HeadingText>
+              <span onClick={this._onClose} class="wnd-Button-icon ic-Icon" style={this.modalCloseCSSStyle}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" focusable="false">
+                  <path fill-rule="evenodd" d="M15 1.95L14.05 1 8 7.17 1.95 1 1 1.95 7.17 8 1 14.05l.95.95L8 8.83 14.05 15l.95-.95L8.83 8 15 1.95z" clip-rule="evenodd"></path>
+                </svg>
+              </span>
 
             <Table items={e2ePaths} style={this.tableCSSStyle} >
               <TableHeader style={this.tableHeaderCSSStyle}>
