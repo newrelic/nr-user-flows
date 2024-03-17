@@ -1,7 +1,7 @@
 {
   "schemaType": "LAUNCHER",
-  "id": "real-user-journey-experience-launcher",
-  "displayName": "RealUserJourneyExperienceLauncher",
-  "description": "Describe me",
-  "rootNerdletId": "real-user-journey-experience"
+  "id": "user-flows-launcher",
+  "displayName": "User Flows",
+  "description": "Automatically visualize your user flows",
+  "rootNerdletId": "user-flows"
 }

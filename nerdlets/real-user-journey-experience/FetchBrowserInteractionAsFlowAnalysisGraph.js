@@ -1,10 +1,9 @@
+/* eslint no-use-before-define: 0 */ // --> OFF
 import React from 'react';
 import { NrqlQuery, Spinner, Link, navigation } from 'nr1';
 
 import { FlowAnalysisGraph } from '@ant-design/graphs';
 import FetchBrowserInteractionFlowDetails from './FetchBrowserInteractionFlowDetails';
-//  https:// charts.ant.design/en/examples/relation-graph/flow-analysis-graph/#type
-//  https:// charts.ant.design/en/manual/getting-started
 
 export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Component {
   constructor(browserInteraction) {
@@ -12,16 +11,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
     // console.log("FetchBrowserInteractionAsFlowAnalysisGraph.constructor >> " + JSON.stringify(browserInteraction));
 
-    // this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl!==targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
-    // this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl!==targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    // this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session) FACET browserInteractionName, domain, category, trigger, actionText where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
+    // this.INTERACTIONS_QUERY = "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' SINCE 1 week ago";
     this.INTERACTIONS_QUERY =
-      "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl!==targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' $TIME_RANGE$";
+      "FROM BrowserInteraction SELECT uniqueCount(session), average(duration) FACET browserInteractionName, domain where appName = '$BR_APP_NAME$' and category IN ('Initial page load','Route change') AND previousUrl != targetUrl AND previousGroupedUrl LIKE '$PREVIOUS_URL$' $TIME_RANGE$";
 
     this.initializeBrowserInteractionAppDetails(browserInteraction);
-  }
-
-  shouldComponentUpdate() {
-    return this.state.render;
   }
 
   initializeBrowserInteractionAppDetails(browserInteraction) {
@@ -30,15 +25,13 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       edges: []
     };
 
-    // eslint-disable-next-line react/no-direct-mutation-state
     this.state = {
       plotData: initPlotData,
       render: false,
       entityGuid: browserInteraction.applicationDetails.guid,
       accountId: browserInteraction.applicationDetails.accountId,
       appName: browserInteraction.applicationDetails.name,
-      // eslint-disable-next-line react/no-unused-state
-      browserInteraction,
+      browserInteraction: browserInteraction,
       displayE2EFlows: false,
       timeRangeClause: browserInteraction.timeRangeClause
     };
@@ -78,16 +71,19 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     });
   }
 
-  // eslint-disable-next-line react/no-deprecated, react/sort-comp
+  shouldComponentUpdate() {
+    return this.state.render;
+  }
+
   componentWillReceiveProps(newBrowserInteraction) {
     if (
-      (this.state.accountId !== null &&
-        this.state.accountId !==
+      (this.state.accountId != null &&
+        this.state.accountId !=
           newBrowserInteraction.applicationDetails.accountId) ||
-      (this.state.appName !== null &&
-        this.state.appName !== newBrowserInteraction.applicationDetails.name) ||
-      (this.state.timeRangeClause !== null &&
-        this.state.timeRangeClause !== newBrowserInteraction.timeRangeClause)
+      (this.state.appName != null &&
+        this.state.appName != newBrowserInteraction.applicationDetails.name) ||
+      (this.state.timeRangeClause != null &&
+        this.state.timeRangeClause != newBrowserInteraction.timeRangeClause)
     ) {
       // console.log("FetchBrowserInteractionAsFlowAnalysisGraph.componentWillReceiveProps >> ");
       // console.log(newBrowserInteraction);
@@ -106,10 +102,10 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       // console.log("this.interactions >> ");
       // console.log(this.interactions);
 
-      //  remove any duplicate interactions and build nodeDetails.
+      // remove any duplicate interactions and build nodeDetails.
       const uniqueNodes = [];
 
-      //  Add First source as Node.
+      // Add First source as Node.
       const srcInteraction = this.interactions[0];
       const nodeDetails = {};
       nodeDetails.value = {};
@@ -147,7 +143,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             );
             // console.log("Interactions for " + thisInteraction.target + " : " + interactionsWithThisTarget.length);
 
-            if (interactionsWithThisTarget.length === 1) {
+            if (interactionsWithThisTarget.length == 1) {
               const avgDurationItem = {};
               avgDurationItem.text = 'page load time';
               avgDurationItem.value = `${thisInteraction.avgDuration.toFixed(
@@ -155,7 +151,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
               )} (s)`;
               nodeDetails.value.items.push(avgDurationItem);
             } else {
-              //  Empty Label Item
+              // Empty Label Item
               const avgDurationItem = {};
               avgDurationItem.text = 'page load time from';
               avgDurationItem.value = '';
@@ -202,11 +198,11 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
 
       // Update rank sep pixels
       const nodeLen = uniqueNodes.length;
-      if (nodeLen === 2) {
+      if (nodeLen == 2) {
         this.rankSepPixel = 110;
-      } else if (nodeLen === 3) {
+      } else if (nodeLen == 3) {
         this.rankSepPixel = 90;
-      } else if (nodeLen === 4) {
+      } else if (nodeLen == 4) {
         this.rankSepPixel = 50;
       } else {
         this.rankSepPixel = 20;
@@ -249,14 +245,14 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       interaction => interaction.source === src
     );
     // console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
-    if (interactionsWithThisSource.length === 0) {
+    if (interactionsWithThisSource.length == 0) {
       this.addInteractionPath(srcPath, duration, facetWhereClauses);
     } else {
       const nxtStepNumber = stepNumber + 1;
 
       interactionsWithThisSource.forEach(interaction => {
-        //  Avoid associative cyclomatic complexity
-        //  a -> b -> c -> d -> e -> c
+        // Avoid associative cyclomatic complexity
+        // a -> b -> c -> d -> e -> c
         if (decoratedSrcPath.includes(`~${interaction.target}~`)) {
           // console.log(srcPath + ' includes ' + interaction.target);
           this.addInteractionPath(srcPath, duration, facetWhereClauses);
@@ -299,16 +295,16 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     thisSrcInteractionName,
     thisDestInteractionName
   ) {
-    // console.log("Input >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+    // console.log("Input >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
     // Check if the edge is recursive
     if (thisSrcInteractionName === thisDestInteractionName) {
-      // console.log("Is a recursive edge >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+      // console.log("Is a recursive edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
     // Check if destination is back to original landing page. This will lead to startover / infinite loop and the rendering makes it infinite
     if (this.landingInteractionName === thisDestInteractionName) {
-      // console.log(" Is edge pointing back to landingPage >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+      // console.log(" Is edge pointing back to landingPage >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
@@ -320,7 +316,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           edge.targetInteractionName === thisDestInteractionName
       )
     ) {
-      // console.log("Is a duplicate edge >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+      // console.log("Is a duplicate edge >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
@@ -333,7 +329,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           edge.targetInteractionName === thisSrcInteractionName
       )
     ) {
-      // console.log("Is a cyclic node >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+      // console.log("Is a cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return false;
     }
 
@@ -344,7 +340,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         edge => edge.srcInteractionName === thisDestInteractionName
       )
     ) {
-      // console.log("For " + this.landingInteractionName + " : Is an associative cyclic node >> " + thisSrcInteractionName +" // ~//  "+ thisDestInteractionName);
+      // console.log("For " + this.landingInteractionName + " : Is an associative cyclic node >> " + thisSrcInteractionName +" //~// "+ thisDestInteractionName);
       return true;
     }
 
@@ -450,40 +446,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     }, 50);
   }
 
-  renderInteractionPaths() {
-    // console.log('FetchBrowserInteractionAsFlowAnalysisGraph.renderInteractionPaths >> ');
-
-    if (this.state.plotData.nodes.length > 1) {
-      const allPaths = {
-        interactionPaths: this.allInteractionsPaths
-      };
-
-      const avgDurationStyle = {
-        textAlign: 'right',
-        marginRight: '75px',
-        fontSize: '14px'
-      };
-      return (
-        <React.Fragment>
-          <div style={avgDurationStyle}>
-            Average end to end duration is{' '}
-            <b>{`${this.allPathsAvgDuration.toFixed(3)} (s)`}</b>. &nbsp;&nbsp;
-            <Link onClick={evt => this.showAllPaths(evt)}>Click here</Link> for
-            individual journey details.
-          </div>
-          {this.state.displayE2EFlows && (
-            <FetchBrowserInteractionFlowDetails
-              {...allPaths}
-              accountId={this.state.accountId}
-            />
-          )}
-        </React.Fragment>
-      );
-    } else {
-      return <div />;
-    }
-  }
-
   render() {
     // console.log("FetchBrowserInteractionAsFlowAnalysisGraph.render >> " + this.state.render);
     // console.log("FetchBrowserInteractionAsFlowAnalysisGraph.render >> " + JSON.stringify(this.state.plotData));
@@ -507,7 +469,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           if (text.length > 15) {
             valueStart = 150;
           }
-          // eslint-disable-next-line no-unused-expressions
           text &&
             group?.addShape('text', {
               attrs: {
@@ -520,7 +481,6 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
               },
               name: `text-${Math.random()}`
             });
-          // eslint-disable-next-line no-unused-expressions
           value &&
             group?.addShape('text', {
               attrs: {
@@ -618,6 +578,40 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           spacingType={[Spinner.SPACING_TYPE.EXTRA_LARGE]}
         />
       );
+    }
+  }
+
+  renderInteractionPaths() {
+    // console.log('FetchBrowserInteractionAsFlowAnalysisGraph.renderInteractionPaths >> ');
+
+    if (this.state.plotData.nodes.length > 1) {
+      const allPaths = {
+        interactionPaths: this.allInteractionsPaths
+      };
+
+      const avgDurationStyle = {
+        textAlign: 'right',
+        marginRight: '75px',
+        fontSize: '14px'
+      };
+      return (
+        <React.Fragment>
+          <div style={avgDurationStyle}>
+            Average end to end duration is{' '}
+            <b>{`${this.allPathsAvgDuration.toFixed(3)} (s)`}</b>. &nbsp;&nbsp;
+            <Link onClick={evt => this.showAllPaths(evt)}>Click here</Link> for
+            individual journey details.
+          </div>
+          {this.state.displayE2EFlows && (
+            <FetchBrowserInteractionFlowDetails
+              {...allPaths}
+              accountId={this.state.accountId}
+            />
+          )}
+        </React.Fragment>
+      );
+    } else {
+      return <div />;
     }
   }
 }
