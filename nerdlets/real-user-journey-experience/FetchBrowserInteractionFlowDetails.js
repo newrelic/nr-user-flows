@@ -47,6 +47,7 @@ const FetchBrowserInteractionFlowDetails = ({
 
   const onHideEnd = () => {
     setMounted(false);
+    setOpen(false);
   };
 
   const modalCSSStyle = {
@@ -100,7 +101,7 @@ const FetchBrowserInteractionFlowDetails = ({
             type={HeadingText.TYPE.HEADING_3}
             style={modalHeaderCSSStyle}
           >
-            End to end Journey flows
+            End to end User flows
           </HeadingText>
           <span onClick={onClose} 
             class="wnd-Button-icon ic-Icon" style={modalCloseCSSStyle}>
@@ -136,7 +137,7 @@ const FetchBrowserInteractionFlowDetails = ({
                   value={item.duration.toFixed(3)}
                 />
                 <TableRowCell>
-                  <Button type={Button.TYPE.PRIMARY} 
+                  <Button type={Button.VARIANT.PRIMARY} 
                     sizeType={Button.SIZE_TYPE.SMALL} 
                     onClick={() => 
                       openChartBuilder({ query: item.e2eDurationNRQL, accountId })}
@@ -145,7 +146,7 @@ const FetchBrowserInteractionFlowDetails = ({
                   </Button>
                 </TableRowCell>
                 <TableRowCell>
-                  <Button type={Button.TYPE.PRIMARY} 
+                  <Button type={Button.VARIANT.PRIMARY} 
                     sizeType={Button.SIZE_TYPE.SMALL} 
                     onClick={() => 
                       openChartBuilder({ query: item.stepWiseNRQL, accountId })}
@@ -154,7 +155,7 @@ const FetchBrowserInteractionFlowDetails = ({
                   </Button>
                 </TableRowCell>
                 <TableRowCell>
-                  <Button type={Button.TYPE.PRIMARY} 
+                  <Button type={Button.VARIANT.PRIMARY} 
                     sizeType={Button.SIZE_TYPE.SMALL} 
                     onClick={() => 
                       openChartBuilder({ query: item.funnelNRQL, accountId })}

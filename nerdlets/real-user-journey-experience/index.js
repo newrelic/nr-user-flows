@@ -34,12 +34,12 @@ const RealUserJourneyExperienceNerdlet = () => {
     >
       <h4>
         Select an <b>Account</b> and a <b>browser application</b> to view the
-        real user journey flow
+        real user flows.
       </h4>
       <br />
       <div>
-        This application displays user journeys from top 5 landing pages. The
-        journeys are derived from browser real user monitoring data.
+        This application displays user flows from top 5 landing pages. The
+        flows are derived from browser real user monitoring data.
       </div>
       <br />
       {platformState.accountId !== 'cross-account' && (

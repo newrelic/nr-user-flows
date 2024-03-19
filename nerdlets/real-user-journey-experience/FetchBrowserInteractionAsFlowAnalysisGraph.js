@@ -611,7 +611,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             Average end to end duration is{' '}
             <b>{`${this.allPathsAvgDuration.toFixed(3)} (s)`}</b>. &nbsp;&nbsp;
             <Link onClick={evt => this.showAllPaths(evt)}>Click here</Link> for
-            individual journey details.
+            individual flow details.
           </div>
           {this.state.displayE2EFlows && (
             <FetchBrowserInteractionFlowDetails

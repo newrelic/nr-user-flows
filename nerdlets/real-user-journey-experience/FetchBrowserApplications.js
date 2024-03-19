@@ -46,7 +46,7 @@ const FetchBrowserApplications = () => {
   const getEntitiesByName = accountId => {
     if (accountId) {
       // eslint-disable-next-line no-console
-      console.log('Fetching entities for', accountId);
+      // console.log('Fetching entities for', accountId);
       setFetchingEntities(true);
       const entityTypeFilter = [
         {
