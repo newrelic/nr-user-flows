@@ -98,6 +98,9 @@ const FetchBrowserApplications = () => {
     name.toLowerCase().includes(search.toLowerCase())
   );
 
+  console.log(selectedApp);
+  console.log(selectedAppDetails);
+
   return (
     <Grid
       style={mainGridCSSStyle}
@@ -172,6 +175,7 @@ const FetchBrowserApplications = () => {
             {({ loading, data }) => {
               if (loading) return <Spinner inline />;
               if (!loading && data) {
+                console.log(data);
                 const browserInteractions = data.facets.map(
                   (facetInfo, indx) => ({
                     id: `A${indx}`,

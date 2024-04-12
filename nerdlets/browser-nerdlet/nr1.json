@@ -1,0 +1,14 @@
+{
+  "schemaType": "NERDLET",
+  "id": "user-flows-browser-nerdlet",
+  "description": "",
+  "displayName": "User Flows",
+  "context": {
+    "entities": [
+      {
+        "domain": "BROWSER",
+        "type": "APPLICATION"
+      }
+    ]
+  }
+}

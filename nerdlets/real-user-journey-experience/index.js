@@ -38,8 +38,8 @@ const RealUserJourneyExperienceNerdlet = () => {
       </h4>
       <br />
       <div>
-        This application displays user flows from top 5 landing pages. The
-        flows are derived from browser real user monitoring data.
+        This application displays user flows from top 5 landing pages. The flows
+        are derived from browser real user monitoring data.
       </div>
       <br />
       {platformState.accountId !== 'cross-account' && (
