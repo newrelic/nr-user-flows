@@ -29,44 +29,42 @@ const AppView = ({ entity }) => {
 
   return (
     <div>
-      <>
-        <GridItem columnSpan={12}>
-          <Stack
-            gapType={Stack.GAP_TYPE.LARGE}
-            horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY}
-            fullWidth
-            fullHeight
-          >
-            <FetchBrowserApplicationDetails {...entity} />
-          </Stack>
-        </GridItem>
+      <GridItem columnSpan={12}>
+        <Stack
+          gapType={Stack.GAP_TYPE.LARGE}
+          horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY}
+          fullWidth
+          fullHeight
+        >
+          <FetchBrowserApplicationDetails {...entity} />
+        </Stack>
+      </GridItem>
 
-        {browserInteractions.length === 0 ? (
-          <GridItem columnSpan={12}>
-            <BlockText
-              type={BlockText.TYPE.PARAGRAPH}
-              tagType={BlockText.TYPE.DIV}
-              spacingType={[BlockText.SPACING_TYPE.LARGE]}
+      {browserInteractions.length === 0 ? (
+        <GridItem columnSpan={12}>
+          <BlockText
+            type={BlockText.TYPE.PARAGRAPH}
+            tagType={BlockText.TYPE.DIV}
+            spacingType={[BlockText.SPACING_TYPE.LARGE]}
+          >
+            There are no user journeys to display
+          </BlockText>
+        </GridItem>
+      ) : (
+        <>
+          {browserInteractions.map(browserInteraction => (
+            <GridItem
+              columnSpan={12}
+              style={journeyGridItemCSSStyle}
+              key={browserInteraction.id}
             >
-              There are no user journeys to display
-            </BlockText>
-          </GridItem>
-        ) : (
-          <>
-            {browserInteractions.map(browserInteraction => (
-              <GridItem
-                columnSpan={12}
-                style={journeyGridItemCSSStyle}
-                key={browserInteraction.id}
-              >
-                <FetchBrowserInteractionAsFlowAnalysisGraph
-                  {...browserInteraction}
-                />
-              </GridItem>
-            ))}
-          </>
-        )}
-      </>
+              <FetchBrowserInteractionAsFlowAnalysisGraph
+                {...browserInteraction}
+              />
+            </GridItem>
+          ))}
+        </>
+      )}
     </div>
   );
 };
