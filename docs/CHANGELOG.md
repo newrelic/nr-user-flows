@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/newrelic/nr-user-flows/compare/v1.3.0...v1.4.0) (2024-04-16)
+
+
+### Features
+
+* update catalog docs ([e432a2c](https://github.com/newrelic/nr-user-flows/commit/e432a2c4c688e85b94c28800ad22cfce3d4ffe06))
+
 # [1.3.0](https://github.com/newrelic/nr-user-flows/compare/v1.2.0...v1.3.0) (2024-04-16)
 
 
