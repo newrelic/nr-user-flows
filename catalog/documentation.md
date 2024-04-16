@@ -45,7 +45,7 @@ The app would the home page of the application, which consists of three drop men
 2. **Entity list** drop down menu - This displays all the browser entities monitored in the account selected.
 3. **Time range** drop down menu - The time duration for which the user flows needs to be displayed.
 
-![userflows homepage](screenshots/userflows_02_homepage.png)
+### User Flows Homepage
 
 Select an account, a browser entity and a time range.
 
@@ -55,7 +55,7 @@ The app would then
 * The app avoids cyclic paths at multiple levels.
 * The app also provides additional information regarding unique Browser Interactions and Browser Sessions.
 
-![User flows](screenshots/userflows_03_userflow_withdetails.png)
+### User Flows
 
 Each flow map provides below information
 * Browser Interaction Names / Page views through which the users have navigated through your website.
@@ -69,17 +69,17 @@ Each flow map provides below information
 Click on the ***click here*** link to view all the individual journey details, a pop up window will appear, which displays all the Flows the end users have taken.
 
 Each record provides the actual Flow path taken by a user.
-![Individual User flows](screenshots/userflows_04_flowspopup.png)
+
+### Individual User Flows
 
 Click on each Open Query Builder, which provides the NRQL to
 1. E2E Duration Query - calculates the overall end to end flow duration. 
-2. Stepwise Query - timeseries based line graph to quickly identify which step takes longer duration. This is very useful to quickly identify and troubleshoot the step, where there could be performance issues. ![Userflow stepwise analysis](screenshots/userflows_06_stepwise.png)
-3. Funnel Query - Funnel analysis (conversion rates) for each user flow. ![User flow funnel analysis](screenshots/userflows_07_funnelanalysis.png)
+2. Stepwise Query - timeseries based line graph to quickly identify which step takes longer duration. This is very useful to quickly identify and troubleshoot the step, where there could be performance issues.
+3. Funnel Query - Funnel analysis (conversion rates) for each user flow. 
 
 You can create an alert or add this widget to a dashboard, which can help DevOps, SRE and Business owners.
 
 
 Click on the body of the Browser Interaction card to view the browser interaction performance pageview to investigate any performance related issues, hindering the User Experience.
 
-![Browser Interaction performance pageview](screenshots/userflows_08_pageview.png)
 
