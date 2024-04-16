@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/newrelic/nr-user-flows/compare/v1.1.0...v1.2.0) (2024-04-16)
+
+
+### Features
+
+* update nr1.json ([3ddecd7](https://github.com/newrelic/nr-user-flows/commit/3ddecd71d6f4f8ffb94e40389015ff96917e924a))
+
 # [1.1.0](https://github.com/newrelic/nr-user-flows/compare/v1.0.0...v1.1.0) (2024-04-16)
 
 
