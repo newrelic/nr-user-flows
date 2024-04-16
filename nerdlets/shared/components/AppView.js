@@ -1,7 +1,7 @@
 import React from 'react';
 import { BlockText, GridItem, Stack } from 'nr1';
-import FetchBrowserApplicationDetails from '../../real-user-journey-experience/FetchBrowserApplicationDetails';
-import FetchBrowserInteractionAsFlowAnalysisGraph from '../../real-user-journey-experience/FetchBrowserInteractionAsFlowAnalysisGraph';
+import FetchBrowserApplicationDetails from '../../nr-user-flows/FetchBrowserApplicationDetails';
+import FetchBrowserInteractionAsFlowAnalysisGraph from '../../nr-user-flows/FetchBrowserInteractionAsFlowAnalysisGraph';
 
 const AppView = ({ entity }) => {
   const { topQuery } = entity;
