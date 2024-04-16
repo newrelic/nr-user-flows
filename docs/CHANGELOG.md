@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/newrelic/nr-user-flows/compare/v1.2.0...v1.3.0) (2024-04-16)
+
+
+### Features
+
+* update homepage screenshot ([90f047f](https://github.com/newrelic/nr-user-flows/commit/90f047f3ad957e773e73e88038394052de2d6d47))
+
 # [1.2.0](https://github.com/newrelic/nr-user-flows/compare/v1.1.0...v1.2.0) (2024-04-16)
 
 
