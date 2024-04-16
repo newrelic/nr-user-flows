@@ -1,0 +1,19 @@
+{
+  "tagline": "Real user flow Experience",
+  "details": "A user flow is a path an end user or customer navigates through a particular website, to perform an intended action or finish his task using our features or products. The User flow app visualises the actual web pages the user has traversed through for various purposes.",
+  "categoryTerms": ["browser agent"],
+  "keywords": ["customer experience", "user flows", "user flow", "customer journey", "user journey", "conversion rate", "conversions", "funnel", "funnel analysis", "bottom of funnel", "proactive observability", "observability maturity", "browser", "frontend", "core web vitals", "ajax"],
+  "repository": "https://github.com/newrelic-experimental/nr-real-user-journey",
+  "whatsNew": "The First Look",
+  "support": {
+    "email": {
+      "address": "opensource@newrelic.com"
+    },
+    "issues": {
+      "url": "https://github.com/newrelic-experimental/nr-real-user-journey/issues"
+    },
+    "community": {
+      "url": "https://github.com/newrelic-experimental/nr-real-user-journey/discussions"
+    }
+  }
+}
