@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/newrelic/nr-user-flows/compare/v1.0.0...v1.1.0) (2024-04-16)
+
+
+### Features
+
+* rename license ([18b183a](https://github.com/newrelic/nr-user-flows/commit/18b183ab919e8a23c9347642a221e5ce5260f972))
+
 # 1.0.0 (2024-04-16)
 
 
