@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/newrelic/nr-user-flows/compare/v1.5.0...v1.6.0) (2024-05-17)
+
+
+### Features
+
+* update state handling ([cb694a7](https://github.com/newrelic/nr-user-flows/commit/cb694a79afa167388e8491e84587d7ad9ddc5aa6))
+
 # [1.5.0](https://github.com/newrelic/nr-user-flows/compare/v1.4.0...v1.5.0) (2024-04-16)
 
 
