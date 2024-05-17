@@ -27,14 +27,15 @@ const openChartBuilder = ({ query, accountId }) => {
 
 const FetchBrowserInteractionFlowDetails = ({
   interactionPaths,
-  accountId
+  accountId,
+  mounted,
+  open,
+  setMounted,
+  setOpen
 }) => {
   const [allInteractionsPaths, setAllInteractionsPaths] = useState(
     interactionPaths
   );
-  // const [hidden, setHidden] = useState(false);
-  const [mounted, setMounted] = useState(true);
-  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     setAllInteractionsPaths(interactionPaths);
@@ -42,6 +43,7 @@ const FetchBrowserInteractionFlowDetails = ({
 
   const onClose = () => {
     // setHidden(true);
+    setMounted(false);
     setOpen(false);
   };
 
@@ -76,7 +78,7 @@ const FetchBrowserInteractionFlowDetails = ({
     top: '-41px',
     right: '10px',
     fontSize: 'xx-large',
-    cursor: 'pointer',
+    cursor: 'pointer'
   };
 
   const tableCSSStyle = {
@@ -103,12 +105,21 @@ const FetchBrowserInteractionFlowDetails = ({
           >
             End to end User flows
           </HeadingText>
-          <span onClick={onClose} 
-            class="wnd-Button-icon ic-Icon" style={modalCloseCSSStyle}>
-            <svg xmlns="http://www.w3.org/2000/svg" 
-              viewBox="0 0 16 16" focusable="false">
-              <path fill-rule="evenodd" d="M15 1.95L14.05 1 8 7.17 1.95 1 1 1.95 7.17 8 1 14.05l.95.95L8 8.83 14.05 15l.95-.95L8.83 8 15 1.95z" 
-                clip-rule="evenodd"></path>
+          <span
+            onClick={onClose}
+            class="wnd-Button-icon ic-Icon"
+            style={modalCloseCSSStyle}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              focusable="false"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M15 1.95L14.05 1 8 7.17 1.95 1 1 1.95 7.17 8 1 14.05l.95.95L8 8.83 14.05 15l.95-.95L8.83 8 15 1.95z"
+                clip-rule="evenodd"
+              ></path>
             </svg>
           </span>
           <Table items={allInteractionsPaths} style={tableCSSStyle}>
@@ -125,7 +136,9 @@ const FetchBrowserInteractionFlowDetails = ({
               >
                 Total duration
               </TableHeaderCell>
-              <TableHeaderCell width="150px">E2E duration Query</TableHeaderCell>
+              <TableHeaderCell width="150px">
+                E2E duration Query
+              </TableHeaderCell>
               <TableHeaderCell width="150px">Stepwise Query</TableHeaderCell>
               <TableHeaderCell width="150px">Funnel Query</TableHeaderCell>
             </TableHeader>
@@ -137,28 +150,37 @@ const FetchBrowserInteractionFlowDetails = ({
                   value={item.duration.toFixed(3)}
                 />
                 <TableRowCell>
-                  <Button type={Button.VARIANT.PRIMARY} 
-                    sizeType={Button.SIZE_TYPE.SMALL} 
-                    onClick={() => 
-                      openChartBuilder({ query: item.e2eDurationNRQL, accountId })}
+                  <Button
+                    type={Button.VARIANT.PRIMARY}
+                    sizeType={Button.SIZE_TYPE.SMALL}
+                    onClick={() =>
+                      openChartBuilder({
+                        query: item.e2eDurationNRQL,
+                        accountId
+                      })
+                    }
                   >
                     Open Query Builder
                   </Button>
                 </TableRowCell>
                 <TableRowCell>
-                  <Button type={Button.VARIANT.PRIMARY} 
-                    sizeType={Button.SIZE_TYPE.SMALL} 
-                    onClick={() => 
-                      openChartBuilder({ query: item.stepWiseNRQL, accountId })}
+                  <Button
+                    type={Button.VARIANT.PRIMARY}
+                    sizeType={Button.SIZE_TYPE.SMALL}
+                    onClick={() =>
+                      openChartBuilder({ query: item.stepWiseNRQL, accountId })
+                    }
                   >
                     Open Query Builder
                   </Button>
                 </TableRowCell>
                 <TableRowCell>
-                  <Button type={Button.VARIANT.PRIMARY} 
-                    sizeType={Button.SIZE_TYPE.SMALL} 
-                    onClick={() => 
-                      openChartBuilder({ query: item.funnelNRQL, accountId })}
+                  <Button
+                    type={Button.VARIANT.PRIMARY}
+                    sizeType={Button.SIZE_TYPE.SMALL}
+                    onClick={() =>
+                      openChartBuilder({ query: item.funnelNRQL, accountId })
+                    }
                   >
                     Open Query Builder
                   </Button>

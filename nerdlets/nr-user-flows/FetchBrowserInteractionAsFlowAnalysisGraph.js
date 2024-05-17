@@ -33,7 +33,9 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
       appName: browserInteraction.applicationDetails.name,
       browserInteraction: browserInteraction,
       displayE2EFlows: false,
-      timeRangeClause: browserInteraction.timeRangeClause
+      timeRangeClause: browserInteraction.timeRangeClause,
+      mounted: false,
+      open: false
     };
 
     this.queryCounter = 0;
@@ -183,14 +185,20 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         // prepare all paths and e2e durations
         this.allInteractionsPaths = this.allInteractionsPaths.slice(1);
         const facetWhereClauses = `WHERE previousGroupedUrl LIKE '${srcInteraction.srcInteractionName}' AND targetGroupedUrl = '${srcInteraction.srcInteractionName}' AS 'LandingPage: ${srcInteraction.srcInteractionName}'`;
-        let funnelSteps = "WHERE targetGroupedUrl = '" + srcInteraction.srcInteractionName + "' AS 'LandingPage: " + srcInteraction.srcInteractionName + "'";
+        let funnelSteps =
+          "WHERE targetGroupedUrl = '" +
+          srcInteraction.srcInteractionName +
+          "' AS 'LandingPage: " +
+          srcInteraction.srcInteractionName +
+          "'";
         this.appendChildPath(
           srcInteraction.source,
           srcInteraction.source,
           `~${srcInteraction.source}~`,
           srcInteraction.avgDuration,
           facetWhereClauses,
-          1, funnelSteps
+          1,
+          funnelSteps
         );
         // console.log("All Paths >> ");
         // console.log(this.allInteractionsPaths);
@@ -245,14 +253,20 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     decoratedSrcPath,
     duration,
     facetWhereClauses,
-    stepNumber, funnelSteps
+    stepNumber,
+    funnelSteps
   ) {
     const interactionsWithThisSource = this.interactions.filter(
       interaction => interaction.source === src
     );
     // console.log("Interactions from " + src + " : " + interactionsWithThisSource.length);
     if (interactionsWithThisSource.length == 0) {
-      this.addInteractionPath(srcPath, duration, facetWhereClauses, funnelSteps);
+      this.addInteractionPath(
+        srcPath,
+        duration,
+        facetWhereClauses,
+        funnelSteps
+      );
     } else {
       const nxtStepNumber = stepNumber + 1;
 
@@ -261,7 +275,12 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
         // a -> b -> c -> d -> e -> c
         if (decoratedSrcPath.includes(`~${interaction.target}~`)) {
           // console.log(srcPath + ' includes ' + interaction.target);
-          this.addInteractionPath(srcPath, duration, facetWhereClauses, funnelSteps);
+          this.addInteractionPath(
+            srcPath,
+            duration,
+            facetWhereClauses,
+            funnelSteps
+          );
         } else {
           const totalPath = `${srcPath} -> ${interaction.target}`;
           const totalDecoratedPath = `${decoratedSrcPath} -> ~${interaction.target}~`;
@@ -271,7 +290,17 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
           const updWhereClauses =
             `${facetWhereClauses},` +
             `WHERE previousGroupedUrl LIKE '${interaction.srcInteractionName}' AND targetGroupedUrl = '${interaction.targetInteractionName}' AS '${stepDisplay}'`;
-          let updFunnelSteps = funnelSteps + "," + "WHERE targetGroupedUrl = '" + interaction.targetInteractionName + "' AS '" + "Step" + stepNumber + ": " + interaction.target + "'";
+          let updFunnelSteps =
+            funnelSteps +
+            ',' +
+            "WHERE targetGroupedUrl = '" +
+            interaction.targetInteractionName +
+            "' AS '" +
+            'Step' +
+            stepNumber +
+            ': ' +
+            interaction.target +
+            "'";
 
           this.appendChildPath(
             totalPath,
@@ -279,7 +308,8 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             totalDecoratedPath,
             totalDuration,
             updWhereClauses,
-            nxtStepNumber, updFunnelSteps
+            nxtStepNumber,
+            updFunnelSteps
           );
         }
       });
@@ -291,9 +321,28 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     pathNode.path = srcPath;
     pathNode.duration = duration;
     //pathNode.nrql = `SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '${this.state.appName}' and category IN ('Initial page load','Route change') FACET CASES (${facetWhereClauses})) ${this.state.timeRangeClause}`;
-    pathNode.e2eDurationNRQL = "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ")) " + this.state.timeRangeClause;
-    pathNode.stepWiseNRQL = "FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') FACET CASES (" + facetWhereClauses + ") " + this.state.timeRangeClause + " TIMESERIES AUTO";
-    pathNode.funnelNRQL = "FROM BrowserInteraction SELECT funnel(session, " + funnelSteps + ") where appName = '" + this.state.appName + "' and category IN ('Initial page load','Route change') " + this.state.timeRangeClause;
+    pathNode.e2eDurationNRQL =
+      "SELECT sum(stepDuration) FROM (FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" +
+      this.state.appName +
+      "' and category IN ('Initial page load','Route change') FACET CASES (" +
+      facetWhereClauses +
+      ')) ' +
+      this.state.timeRangeClause;
+    pathNode.stepWiseNRQL =
+      "FROM BrowserInteraction SELECT average(duration) AS stepDuration where appName = '" +
+      this.state.appName +
+      "' and category IN ('Initial page load','Route change') FACET CASES (" +
+      facetWhereClauses +
+      ') ' +
+      this.state.timeRangeClause +
+      ' TIMESERIES AUTO';
+    pathNode.funnelNRQL =
+      'FROM BrowserInteraction SELECT funnel(session, ' +
+      funnelSteps +
+      ") where appName = '" +
+      this.state.appName +
+      "' and category IN ('Initial page load','Route change') " +
+      this.state.timeRangeClause;
     // console.log(pathNode.nrql);
     this.allInteractionsPaths.push(pathNode);
   }
@@ -452,8 +501,7 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
     this.setState({ render: true });
 
     setTimeout(() => {
-      this.setState({ render: false });
-      this.setState({ displayE2EFlows: false });
+      this.setState({ mounted: true, open: true });
     }, 50);
   }
 
@@ -613,10 +661,15 @@ export default class FetchBrowserInteractionAsFlowAnalysisGraph extends React.Co
             <Link onClick={evt => this.showAllPaths(evt)}>Click here</Link> for
             individual flow details.
           </div>
+
           {this.state.displayE2EFlows && (
             <FetchBrowserInteractionFlowDetails
               {...allPaths}
               accountId={this.state.accountId}
+              mounted={this.state.mounted}
+              open={this.state.open}
+              setMounted={mounted => this.setState({ mounted })}
+              setOpen={open => this.setState({ open })}
             />
           )}
         </React.Fragment>

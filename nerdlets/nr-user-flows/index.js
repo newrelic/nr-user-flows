@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useMemo } from 'react';
 import { nerdlet, PlatformStateContext } from 'nr1';
 import FetchBrowserApplications from './FetchBrowserApplications';
 
@@ -25,28 +25,30 @@ const RealUserJourneyExperienceNerdlet = () => {
 
   const platformState = useContext(PlatformStateContext);
 
-  return (
-    <div
-      style={{
-        margin: '3px',
-        fontSize: '14px'
-      }}
-    >
-      <h4>
-        Select an <b>Account</b> and a <b>browser application</b> to view the
-        real user flows.
-      </h4>
-      <br />
-      <div>
-        This application displays user flows from top 5 landing pages. The flows
-        are derived from browser real user monitoring data.
+  return useMemo(() => {
+    return (
+      <div
+        style={{
+          margin: '3px',
+          fontSize: '14px'
+        }}
+      >
+        <h4>
+          Select an <b>Account</b> and a <b>browser application</b> to view the
+          real user flows.
+        </h4>
+        <br />
+        <div>
+          This application displays user flows from top 5 landing pages. The
+          flows are derived from browser real user monitoring data.
+        </div>
+        <br />
+        {platformState.accountId !== 'cross-account' && (
+          <FetchBrowserApplications />
+        )}
       </div>
-      <br />
-      {platformState.accountId !== 'cross-account' && (
-        <FetchBrowserApplications />
-      )}
-    </div>
-  );
+    );
+  }, [platformState.accountId]);
 };
 
 export default RealUserJourneyExperienceNerdlet;
