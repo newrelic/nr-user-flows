@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/newrelic/nr-user-flows/compare/v1.4.0...v1.5.0) (2024-04-16)
+
+
+### Features
+
+* dummy commit ([c660165](https://github.com/newrelic/nr-user-flows/commit/c660165c1108dc7da17bb534c17ad7d157b8fd37))
+
 # [1.4.0](https://github.com/newrelic/nr-user-flows/compare/v1.3.0...v1.4.0) (2024-04-16)
 
 
